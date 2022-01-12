@@ -1,0 +1,48 @@
+﻿FUNCTION_BLOCK "FB_obsluga_alarmow"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      aktualnyIndexProgramu { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+
+   VAR 
+      alarm { S7_SetPoint := 'False'} : Array[0..99] of "typAlarmNew";   // instancje nazwij np. F1.alarmy
+      x { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+
+
+BEGIN
+	//program obsługuje obiekty rozpoznaje ich typy i wykonuje odpowiednie akcje
+	//zeruje timery
+	//przelicza wartości
+	//wykonuje procedure [0] i [1] dla każdego obiektu
+	
+	
+	FOR #x := 1 TO 99 DO
+	
+	    
+	    // IF #alarm[#x].procedura = 0 THEN //jezeli aktualna procedura 0 to kasuj alarm
+	    //     #alarm[#x].timerek := 0;
+	    //     #alarm[#x].stan := 0;
+	    // END_IF;
+	    
+	    IF #alarm[#x].procedura = 1 THEN //jezeli aktualna procedura 1 to wlacz alarm
+	        #alarm[#x].timerek := 0;
+	        #alarm[#x].stan := 1;
+	    END_IF;
+	END_FOR;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION_BLOCK
+
