@@ -1,0 +1,1111 @@
+﻿FUNCTION_BLOCK "FB_obsluga_obiektow"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      obiekt { S7_SetPoint := 'False'} : Array[0..110] of "typObiekt";   // instancje nazwij np.C1 dla stacji CIP1
+      tor { S7_SetPoint := 'False'} : Array[0..2] of "typFunkcjeObiektówCipu";   // [0..xx] ilosc torów stacji CIP, 0- tor wspólny
+      x { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+
+
+BEGIN
+	//program obsługuje obiekty rozpoznaje ich typy i wykonuje odpowiednie akcje
+	//zeruje timery
+	//przelicza wartości
+	//wykonuje procedure [0] i [1] dla każdego obiektu
+	
+	
+	
+	FOR #x := 1 TO 110 DO
+	    CASE #obiekt[#x].typObiektu OF
+	            
+	            
+	        1:    //zawór przełączny "Banjo" "MixProof" i inne ON OFF    
+	            REGION typ1
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].hmiManualStart AND #obiekt[#x].inZezwolenieNaPracę; //jeżeli tryb ręczny to steruj zawór ze stacyjki
+	                ELSE
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].inStartAuto AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                
+	                //obsługa potwierdzeń otwarcia zamknięcia zaworu
+	                IF #obiekt[#x].inJestPotwWysterowania THEN
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].diPotwWysterowania;
+	                ELSE
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF #obiekt[#x].inJestPotwNiewysterowania THEN
+	                    #obiekt[#x].hmiPotwNieWysterowania := #obiekt[#x].diPotwNieWysterowania;
+	                ELSE
+	                    #obiekt[#x].hmiPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                
+	                
+	                
+	                //SYMULACJA
+	                //
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                    #obiekt[#x].hmiPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                
+	                //obsługa LiftUp Lift Down w zaworze Mixproof
+	                //
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    #obiekt[#x].outLiftUp := #obiekt[#x].hmiManualLiftUp AND #obiekt[#x].inZezwolenieNaPracę; //jeżeli tryb ręczny to steruj zawór ze stacyjki
+	                ELSE
+	                    #obiekt[#x].outLiftUp := #obiekt[#x].inLiftUp AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    #obiekt[#x].outLiftDown := #obiekt[#x].hmiManualLiftDown AND #obiekt[#x].inZezwolenieNaPracę; //jeżeli tryb ręczny to steruj zawór ze stacyjki
+	                ELSE
+	                    #obiekt[#x].outLiftDown := #obiekt[#x].inLiftDown AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                
+	                
+	                
+	                // zliczanie czasu awarii gdy nie ma potwierdzenia 
+	                IF #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].hmiPotwWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].hmiPotwNieWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                // wystawienie sygnału awarii
+	                IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                    #obiekt[#x].Awaria := 1;
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                END_IF;
+	                // kasowanie czasu awarii gdy wszystkie potwierdzenia są ok
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].hmiPotwWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND #obiekt[#x].hmiPotwNieWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                IF #obiekt[#x].hmiResetAwaria
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                    #obiekt[#x].hmiResetAwaria := 0;
+	                END_IF;
+	                
+	                //stan zaworu grafika
+	                IF #obiekt[#x].hmiTrybAutoManual = 0 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 1;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 3;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 5;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 2;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 4;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 6;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	            END_REGION
+	        2: //zawór analogowy
+	            REGION typ2
+	                
+	                
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    
+	                    #obiekt[#x].outWysterowanieUrządzenia := LIMIT(MN := 0.0, IN := #obiekt[#x].hmiManualneWysterowanie, MX := 100.0); //jezeli tryb ręczny to zadane otwarcie ze stacyjki
+	                    
+	                    IF #obiekt[#x].hmiManualStart = 0 THEN
+	                        #obiekt[#x].outWysterowanieUrządzenia := 0;
+	                    END_IF;
+	                    
+	                    
+	                ELSE
+	                    #obiekt[#x].outWysterowanieUrządzenia := LIMIT(MN := 0.0, IN := #obiekt[#x].inZadaneWysterowanieAuto, MX := 100.0);
+	                END_IF;
+	                IF #obiekt[#x].inZezwolenieNaPracę = false THEN  //ZERUJ WYJSCIE JAK BRAK ZEZWOLENIA NA PRACĘ NA PRZYKŁAD STOP AWARJNY
+	                    #obiekt[#x].outWysterowanieUrządzenia := 0.0;
+	                END_IF;
+	                
+	                IF #obiekt[#x].outWysterowanieUrządzenia = 0 THEN
+	                    #obiekt[#x].outStartUrządzenie := FALSE;
+	                END_IF;
+	                IF #obiekt[#x].outWysterowanieUrządzenia = 100.0 THEN
+	                    #obiekt[#x].outStartUrządzenie := TRUE;
+	                END_IF;
+	                //obsługa potwierdzeń otwarcia zamknięcia zaworu
+	                IF NOT #obiekt[#x].inJestPotwWysterowania THEN
+	                    #obiekt[#x].diPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF NOT #obiekt[#x].inJestPotwNiewysterowania THEN
+	                    #obiekt[#x].diPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    IF #obiekt[#x].inJestPotwWysterowania THEN
+	                        #obiekt[#x].diPotwWysterowania := #obiekt[#x].hmiSymulacjaPotwNieWysterowania;
+	                    END_IF;
+	                    IF #obiekt[#x].inJestPotwNiewysterowania THEN
+	                        #obiekt[#x].diPotwNieWysterowania := #obiekt[#x].hmiSymulacjaPotwNieWysterowania;
+	                    END_IF;
+	                END_IF;
+	                
+	                // zliczanie czasu awarii gdy nie ma potwierdzenia 
+	                IF #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].diPotwWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].diPotwNieWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                // wystawienie sygnału awarii
+	                IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                    #obiekt[#x].Awaria := 1;
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                END_IF;
+	                // kasowanie czasu awarii gdy wszystkie potwierdzenia są ok
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].diPotwWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND #obiekt[#x].diPotwNieWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                
+	                
+	                //grafika
+	                //
+	                IF #obiekt[#x].hmiTrybAutoManual =0 THEN
+	                    IF (#obiekt[#x].outWysterowanieUrządzenia = 0.0) THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 1;
+	                    END_IF;
+	                    IF (#obiekt[#x].outWysterowanieUrządzenia > 0.0) THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 3;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 6;
+	                    END_IF;
+	                END_IF;
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    IF (#obiekt[#x].outWysterowanieUrządzenia = 0.0) THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 2;
+	                    END_IF;
+	                    IF (#obiekt[#x].outWysterowanieUrządzenia > 0.0) THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 4;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 6;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                
+	                
+	                
+	                
+	            END_REGION
+	        3://pompa na styczniku
+	            REGION typ3
+	                
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].hmiManualStart AND #obiekt[#x].inZezwolenieNaPracę;
+	                ELSE
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].inStartAuto AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                
+	                //obsługa potwierdzeń zalaczenia
+	                IF #obiekt[#x].inJestPotwWysterowania THEN
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].diPotwWysterowania;
+	                ELSE
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF #obiekt[#x].inJestPotwNiewysterowania THEN
+	                    #obiekt[#x].hmiPotwNieWysterowania := #obiekt[#x].diPotwNieWysterowania;
+	                ELSE
+	                    #obiekt[#x].hmiPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                
+	                
+	                
+	                
+	                
+	                
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    IF #obiekt[#x].inJestPotwWysterowania THEN
+	                        #obiekt[#x].hmiSymulacjaPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                    END_IF;
+	                    IF #obiekt[#x].inJestPotwNiewysterowania THEN
+	                        #obiekt[#x].diPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                        ;
+	                    END_IF;
+	                END_IF;
+	                
+	                // zliczanie czasu awarii gdy nie ma potwierdzenia 
+	                IF #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].hmiPotwWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].hmiPotwNieWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                // wystawienie sygnału awarii
+	                IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                    #obiekt[#x].Awaria := 1;
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                END_IF;
+	                // kasowanie czasu awarii gdy wszystkie potwierdzenia są ok
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].hmiPotwWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND #obiekt[#x].hmiPotwNieWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                IF #obiekt[#x].hmiResetAwaria
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                    #obiekt[#x].hmiResetAwaria := 0;
+	                END_IF;
+	                
+	                
+	                
+	                
+	                
+	                //zliczanie czasu pracy
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].diPotwWysterowania THEN
+	                    #obiekt[#x].czasPracyGodziny := #obiekt[#x].czasPracyGodziny + (1 / 36000);// dzielnik 36000 - zwiazany z cyklem wywoływania funkkcji FC Obsługa obiektów
+	                END_IF;
+	                
+	                //grafika
+	                //
+	                IF #obiekt[#x].hmiTrybAutoManual = 0 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 1;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 3;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 5;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 2;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 4;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 6;
+	                    END_IF;
+	                END_IF;
+	            END_REGION
+	        4://Pompa na falowniku   
+	            REGION typ4
+	                
+	                IF #obiekt[#x].hmiManualneWysterowanie > 100.0 THEN //zapobieganie przekroczeniu wpisu
+	                    #obiekt[#x].hmiManualneWysterowanie := 100.0;
+	                END_IF;
+	                IF #obiekt[#x].hmiManualneWysterowanie < 0.0 THEN //zapobieganie przekroczeniu wpisu
+	                    #obiekt[#x].hmiManualneWysterowanie := 0.0;
+	                END_IF;
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    IF #obiekt[#x].outWysterowanieUrządzenia < #obiekt[#x].hmiManualneWysterowanie THEN
+	                        #obiekt[#x].outWysterowanieUrządzenia := #obiekt[#x].outWysterowanieUrządzenia + (100.0 / (100 * (#obiekt[#x].pid_Rampa + 0.0001)));//rampa startu w sekundach
+	                    ELSE
+	                        #obiekt[#x].outWysterowanieUrządzenia := #obiekt[#x].hmiManualneWysterowanie;
+	                    END_IF;
+	                    #obiekt[#x].outWysterowanieUrządzenia := LIMIT(MN := 0.0, IN := #obiekt[#x].outWysterowanieUrządzenia, MX := 100.0); //jezeli tryb ręczny to zadane otwarcie ze stacyjki
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].hmiManualStart;// AND (#obiekt[#x].outWysterowanieUrządzenia > 1.0); //AND #obiekt[#x].inZezwolenieNaPracę;
+	                ELSE
+	                    
+	                    IF #obiekt[#x].outWysterowanieUrządzenia < #obiekt[#x].inZadaneWysterowanieAuto-5.0 THEN
+	                        #obiekt[#x].outWysterowanieUrządzenia := #obiekt[#x].outWysterowanieUrządzenia + (100.0 / (100 * (#obiekt[#x].tFiltr + 0.01)));//rampa startu
+	                    ELSE
+	                        #obiekt[#x].outWysterowanieUrządzenia := #obiekt[#x].inZadaneWysterowanieAuto;
+	                    END_IF;
+	                    IF #obiekt[#x].outWysterowanieUrządzenia > #obiekt[#x].inZadaneWysterowanieAuto + 5.0 THEN
+	                        #obiekt[#x].outWysterowanieUrządzenia := #obiekt[#x].outWysterowanieUrządzenia -(100.0 / (100 * (#obiekt[#x].tFiltr + 0.01)));//rampa startu
+	                    ELSE
+	                        #obiekt[#x].outWysterowanieUrządzenia := #obiekt[#x].inZadaneWysterowanieAuto;
+	                    END_IF;
+	                    
+	                    #obiekt[#x].outWysterowanieUrządzenia := LIMIT(MN := 0.0, IN := #obiekt[#x].outWysterowanieUrządzenia, MX := 100.0);
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].inStartAuto AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                
+	                IF #obiekt[#x].inStartAuto = 0 AND (#obiekt[#x].hmiManualStart = 0 AND #obiekt[#x].hmiTrybAutoManual = 1) THEN//zeruj wysterowanie gdy stop
+	                    #obiekt[#x].outWysterowanieUrządzenia := 0.0;
+	                END_IF;
+	                
+	                
+	                
+	                //  #obiekt[#x].tagerror := UNSCALE(IN := #obiekt[#x].hmiWysterowanieFalownika, HI_LIM := 100.0, LO_LIM := 0.0, BIPOLAR := 0, OUT => #obiekt[#x].aoWysterFalownika);
+	                //obsługa potwierdzeń otwarcia zamknięcia zaworu
+	                IF #obiekt[#x].inJestPotwWysterowania THEN
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].diPotwWysterowania;
+	                ELSE
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF #obiekt[#x].inJestPotwNiewysterowania THEN
+	                    #obiekt[#x].hmiPotwNieWysterowania := #obiekt[#x].diPotwNieWysterowania;
+	                ELSE
+	                    #obiekt[#x].hmiPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                
+	                
+	                
+	                //SYMULACJA
+	                //
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                    #obiekt[#x].hmiPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                
+	                // zliczanie czasu awarii gdy nie ma potwierdzenia 
+	                IF #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].hmiPotwWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].hmiPotwNieWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                //wystawienie sygnału awarii
+	                IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                    #obiekt[#x].Awaria := 1;
+	                    
+	                    ;
+	                END_IF;
+	                //kasowanie sygnału awarii z hmi
+	                IF #obiekt[#x].hmiResetAwaria = 1 THEN
+	                    #obiekt[#x].Awaria := 0;
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                //kasowanie czasu awarii gdy wszystkie potwierdzenia są ok
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].hmiPotwWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                    #obiekt[#x].Awaria := 0;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND #obiekt[#x].hmiPotwNieWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                    #obiekt[#x].Awaria := 0;
+	                END_IF;
+	                
+	                //zliczanie czasu pracy
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].diPotwWysterowania THEN
+	                    #obiekt[#x].czasPracyGodziny := #obiekt[#x].czasPracyGodziny + (1 / 36000);// dzielnik 36000 - zwiazany z cyklem wywoływania funkkcji FC Obsługa obiektów
+	                END_IF;
+	                
+	                //grafika
+	                //
+	                IF #obiekt[#x].hmiTrybAutoManual = 0 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 1;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 3;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 5;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 2;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 4;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 6;
+	                    END_IF;
+	                END_IF;
+	            END_REGION
+	        5:  // Termometr
+	            REGION typ5
+	                
+	                
+	                //skalowanie
+	                #obiekt[#x].kodBłedu := SCALE(IN := #obiekt[#x].inPomiarRaw,
+	                                              HI_LIM := #obiekt[#x].maxskali,
+	                                              LO_LIM := #obiekt[#x].minSkali,
+	                                              BIPOLAR := 0,
+	                                              OUT => #obiekt[#x].pomiarTymczas);
+	                
+	                //filtrowanie
+	                #obiekt[#x].wyjTymczas := (#obiekt[#x].pomiarTymczas * (1 - #obiekt[#x].tFiltr)) + (#obiekt[#x].tFiltr * #obiekt[#x].WartośćPomiaru);
+	                #obiekt[#x].WartośćPomiaru := #obiekt[#x].wyjTymczas;
+	                
+	                //symulacja
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa < #obiekt[#x].minSkali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].minSkali;
+	                    END_IF;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa > #obiekt[#x].maxskali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].maxskali;
+	                    END_IF;
+	                END_IF;
+	                //wyrzucanie bledu pomiaru
+	                IF (#obiekt[#x].kodBłedu <> 0) AND (#obiekt[#x].czasDoAwariiPV < 10000) THEN
+	                    
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                    
+	                    IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                        #obiekt[#x].Awaria := 1;
+	                    END_IF;
+	                    
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                
+	            END_REGION
+	        6,18: //Ciśnieniomierz  
+	            REGION typ6
+	                
+	                
+	                
+	                //skalowanie
+	                #obiekt[#x].kodBłedu := SCALE(IN := #obiekt[#x].inPomiarRaw,
+	                                              HI_LIM := #obiekt[#x].maxskali,
+	                                              LO_LIM := #obiekt[#x].minSkali,
+	                                              BIPOLAR := 0,
+	                                              OUT => #obiekt[#x].pomiarTymczas);
+	                
+	                //filtrowanie
+	                #obiekt[#x].wyjTymczas := (#obiekt[#x].pomiarTymczas * (1 - #obiekt[#x].tFiltr)) + (#obiekt[#x].tFiltr * #obiekt[#x].WartośćPomiaru);
+	                #obiekt[#x].WartośćPomiaru := #obiekt[#x].wyjTymczas;
+	                
+	                //symulacja
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa < #obiekt[#x].minSkali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].minSkali;
+	                    END_IF;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa > #obiekt[#x].maxskali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].maxskali;
+	                    END_IF;
+	                END_IF;
+	                //wyrzucanie bledu pomiaru
+	                IF (#obiekt[#x].kodBłedu <> 0) AND (#obiekt[#x].czasDoAwariiPV < 10000) THEN
+	                    
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                    
+	                    IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                        #obiekt[#x].Awaria := 1;
+	                    END_IF;
+	                    
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	            END_REGION
+	            
+	            
+	            
+	        12: //CT stęzenie
+	            REGION typ12
+	                
+	                
+	                
+	                //skalowanie
+	                #obiekt[#x].kodBłedu := SCALE(IN := #obiekt[#x].inPomiarRaw,
+	                                              HI_LIM := #obiekt[#x].maxskali,
+	                                              LO_LIM := #obiekt[#x].minSkali,
+	                                              BIPOLAR := 0,
+	                                              OUT => #obiekt[#x].pomiarTymczas);
+	                
+	                //filtrowanie
+	                #obiekt[#x].wyjTymczas := (#obiekt[#x].pomiarTymczas * (1 - #obiekt[#x].tFiltr))
+	                + (#obiekt[#x].tFiltr * #obiekt[#x].pid_Rampa);
+	                #obiekt[#x].pid_Rampa := #obiekt[#x].wyjTymczas;
+	                #obiekt[#x].WartośćPomiaru := #obiekt[#x].wyjTymczas;
+	                
+	                //symulacja
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa < #obiekt[#x].minSkali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].minSkali;
+	                    END_IF;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa > #obiekt[#x].maxskali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].maxskali;
+	                    END_IF;
+	                END_IF;
+	                //wyrzucanie bledu pomiaru
+	                IF (#obiekt[#x].kodBłedu <> 0) AND (#obiekt[#x].czasDoAwariiPV < 10000) THEN
+	                    
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                    
+	                    IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                        #obiekt[#x].Awaria := 1;
+	                    END_IF;
+	                    
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	            END_REGION
+	            
+	            
+	            
+	            
+	            
+	        7: //Przepływomierz 
+	            REGION typ7
+	                
+	                
+	                
+	                
+	                //skalowanie
+	                #obiekt[#x].kodBłedu := SCALE(IN := #obiekt[#x].inPomiarRaw,
+	                                              HI_LIM := #obiekt[#x].maxskali,
+	                                              LO_LIM := #obiekt[#x].minSkali,
+	                                              BIPOLAR := 0,
+	                                              OUT => #obiekt[#x].pomiarTymczas);
+	                #obiekt[#x].hmiMetry3NaImpuls := #obiekt[#x].pomiarTymczas / 36000.0;// ile litrow co 100ms leci w rurze
+	                //filtrowanie
+	                //
+	                #obiekt[#x].tFiltr := 0.9;
+	                #obiekt[#x].wyjTymczas := (#obiekt[#x].pomiarTymczas *
+	                (1 - #obiekt[#x].tFiltr)) + (#obiekt[#x].tFiltr * #obiekt[#x].WartośćPomiaru);
+	                #obiekt[#x].WartośćPomiaru := #obiekt[#x].wyjTymczas;
+	                
+	                //symulacja
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa < #obiekt[#x].minSkali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].minSkali;
+	                    END_IF;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa > #obiekt[#x].maxskali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].maxskali;
+	                    END_IF;
+	                END_IF;
+	                //wyrzucanie bledu pomiaru
+	                IF (#obiekt[#x].kodBłedu <> 0) AND (#obiekt[#x].czasDoAwariiPV < 10000) THEN
+	                    
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                    
+	                    IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                        #obiekt[#x].Awaria := 1;
+	                    END_IF;
+	                    
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                
+	                
+	                // //licznikimpulsów i metrów sześciennych
+	                // //symulacja
+	                // IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                //     #obiekt[#x].licznikTotalImpulsy := #obiekt[#x].licznikTotalImpulsy + 1;
+	                //     IF #obiekt[#x].licznikTotalImpulsy > 1000.0 / #obiekt[#x].hmiSymulowanaWartośćAnalogowa / 2.0 THEN
+	                //         #obiekt[#x].diImpulsy := 1;
+	                //     END_IF;
+	                //     IF #obiekt[#x].licznikTotalImpulsy > 1000.0 / #obiekt[#x].hmiSymulowanaWartośćAnalogowa THEN
+	                //         #obiekt[#x].licznikTotalImpulsy := 0;
+	                //         #obiekt[#x].diImpulsy := 0;
+	                //     END_IF;
+	                // END_IF;
+	                
+	                // //zliczanie litrow po impulsach
+	                
+	                // IF #obiekt[#x].diImpulsy AND NOT #obiekt[#x].R_Trig THEN // warunek spełniony przy zboczu narastającym
+	                
+	                //     IF #obiekt[#x].startLicznik1 THEN
+	                //         #obiekt[#x].licznik1 := #obiekt[#x].licznik1 + #obiekt[#x].hmiMetry3NaImpuls;
+	                //     END_IF;
+	                //     IF #obiekt[#x].startLicznik2 THEN
+	                //         #obiekt[#x].licznik2 := #obiekt[#x].licznik2 + #obiekt[#x].hmiMetry3NaImpuls;
+	                //     END_IF;
+	                //     IF #obiekt[#x].startLicznik3 THEN
+	                //         #obiekt[#x].licznik3 := #obiekt[#x].licznik3 + #obiekt[#x].hmiMetry3NaImpuls;
+	                //     END_IF;
+	                
+	                // END_IF;
+	                // #obiekt[#x].R_Trig := #obiekt[#x].diImpulsy;
+	                
+	                //zliczanie litrow po impulsach
+	                
+	                ////nowe zliczanie po wartosci co 100mS
+	                //
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    #obiekt[#x].hmiMetry3NaImpuls := #obiekt[#x].hmiSymulowanaWartośćAnalogowa / 36000.0;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].startLicznik1 THEN
+	                    #obiekt[#x].licznik1 := #obiekt[#x].licznik1 + #obiekt[#x].hmiMetry3NaImpuls;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].startLicznik2 THEN
+	                    #obiekt[#x].licznik2 := #obiekt[#x].licznik2 + #obiekt[#x].hmiMetry3NaImpuls;
+	                END_IF;
+	                IF #obiekt[#x].startLicznik3 THEN
+	                    #obiekt[#x].licznik3 := #obiekt[#x].licznik3 + #obiekt[#x].hmiMetry3NaImpuls;
+	                END_IF;
+	                
+	                //takie tam zeby diodka impulsowala
+	                //
+	                #obiekt[#x].diImpulsy := #obiekt[#x].diImpulsy;
+	                
+	                ////////
+	                
+	                
+	                
+	                
+	                
+	                #obiekt[#x].R_Trig := #obiekt[#x].diImpulsy;
+	                
+	                // kasowanie liczników
+	                IF #obiekt[#x].zerujLicznik1 THEN
+	                    #obiekt[#x].licznik1 := 0.0;
+	                END_IF;
+	                IF #obiekt[#x].zerujLicznik2 THEN
+	                    #obiekt[#x].licznik2 := 0.0;
+	                END_IF;
+	                IF #obiekt[#x].zerujLicznik3 THEN
+	                    #obiekt[#x].licznik3 := 0.0;
+	                END_IF;
+	            END_REGION
+	        8://PID
+	            REGION typ8
+	                
+	                
+	                ;
+	                IF #obiekt[#x].inZadaneWysterowanieAuto = 0.0 THEN
+	                    #obiekt[#x].hmiStanUrządzenia := 0;
+	                END_IF;
+	                IF #obiekt[#x].inZadaneWysterowanieAuto <> 0.0 THEN
+	                    #obiekt[#x].hmiStanUrządzenia := 1;
+	                END_IF;
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    #obiekt[#x].hmiStanUrządzenia := 2;
+	                END_IF;
+	            END_REGION
+	        9: //czujnik cyfrowy ONOFF
+	            REGION typ9
+	                
+	                
+	                // stan urządzenia DO stacyjki
+	                IF #obiekt[#x].hmiPotwWysterowania THEN
+	                    #obiekt[#x].hmiStanUrządzenia := 3;
+	                ELSE
+	                    #obiekt[#x].hmiStanUrządzenia := 1;
+	                END_IF;
+	                // stan urządzenia DO stacyjki w symulacji
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].hmiPotwWysterowania := #obiekt[#x].hmiSymulacjaPotwWysterowania;
+	                    IF #obiekt[#x].hmiPotwWysterowania THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 4;
+	                    ELSE
+	                        #obiekt[#x].hmiStanUrządzenia := 2;
+	                    END_IF;
+	                ELSE
+	                    
+	                    //w auto licz wejscie  // czas doAwarii to tu oznacza czas po którym mamy pewność że czujnik się właściwie załączył
+	                    //  przeciwdziałamy mryganiu wejścia  - filtrujemy ze stałą czasową #obiekt[#x].CzasDoAwariiSP
+	                    
+	                    
+	                    IF #obiekt[#x].diPotwWysterowania = 1 AND #obiekt[#x].czasDoAwariiPV < 5 THEN
+	                        #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                    END_IF;
+	                    IF #obiekt[#x].diPotwWysterowania = 0 AND #obiekt[#x].czasDoAwariiPV > 0 THEN
+	                        #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV - 1;
+	                    END_IF;
+	                    
+	                    //dla 0 -czujnik niepobudzony, dla SP czujnik -pobudzony
+	                    IF #obiekt[#x].czasDoAwariiPV <= 1 THEN
+	                        #obiekt[#x].hmiPotwWysterowania := 0;
+	                    END_IF;
+	                    IF #obiekt[#x].czasDoAwariiPV >= 5 THEN
+	                        #obiekt[#x].hmiPotwWysterowania := 1;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                
+	            END_REGION
+	        17: //Przepływomierz PROFINET
+	            REGION typ17
+	                
+	                //skalowanie
+	                #obiekt[#x].pomiarTymczas :=   #obiekt[#x].pomiarTymczas;//wejscie real ze zmiennej PROFINET
+	                
+	                #obiekt[#x].hmiMetry3NaImpuls := #obiekt[#x].pomiarTymczas / 36000.0;// ile litrow co 100ms leci w rurze
+	                //filtrowanie
+	                //
+	                #obiekt[#x].tFiltr := 0.9;
+	                #obiekt[#x].wyjTymczas := (#obiekt[#x].pomiarTymczas *
+	                (1 - #obiekt[#x].tFiltr)) + (#obiekt[#x].tFiltr * #obiekt[#x].WartośćPomiaru);
+	                #obiekt[#x].WartośćPomiaru := #obiekt[#x].wyjTymczas;
+	                
+	                //symulacja
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa < #obiekt[#x].minSkali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].minSkali;
+	                    END_IF;
+	                    IF #obiekt[#x].hmiSymulowanaWartośćAnalogowa > #obiekt[#x].maxskali THEN
+	                        #obiekt[#x].hmiSymulowanaWartośćAnalogowa := #obiekt[#x].maxskali;
+	                    END_IF;
+	                END_IF;
+	                //wyrzucanie bledu pomiaru
+	                IF (#obiekt[#x].kodBłedu <> 0) AND (#obiekt[#x].czasDoAwariiPV < 10000) THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                    IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                        #obiekt[#x].Awaria := 1;
+	                    END_IF;
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                
+	                ////nowe zliczanie po wartosci co 100mS
+	                //
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    #obiekt[#x].WartośćPomiaru := #obiekt[#x].hmiSymulowanaWartośćAnalogowa;
+	                    #obiekt[#x].hmiMetry3NaImpuls := #obiekt[#x].hmiSymulowanaWartośćAnalogowa / 36000.0 / 2.0;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].startLicznik1 THEN
+	                    #obiekt[#x].licznik1 := #obiekt[#x].licznik1 + #obiekt[#x].hmiMetry3NaImpuls;
+	                END_IF;
+	                
+	          
+	                
+	                IF #obiekt[#x].startLicznik2 THEN
+	                    #obiekt[#x].licznik2 := #obiekt[#x].licznik2 + #obiekt[#x].hmiMetry3NaImpuls;
+	                END_IF;
+	                IF #obiekt[#x].startLicznik3 THEN
+	                    #obiekt[#x].licznik3 := #obiekt[#x].licznik3 + #obiekt[#x].hmiMetry3NaImpuls;
+	                END_IF;
+	                
+	                //takie tam zeby diodka impulsowala
+	                //
+	                #obiekt[#x].diImpulsy := #obiekt[#x].diImpulsy;
+	                
+	                ////////
+	                
+	                
+	                
+	                
+	                
+	                #obiekt[#x].R_Trig := #obiekt[#x].diImpulsy;
+	                
+	                // kasowanie liczników
+	                IF #obiekt[#x].zerujLicznik1 THEN
+	                    #obiekt[#x].licznik1 := 0.0;
+	                END_IF;
+	                IF #obiekt[#x].zerujLicznik2 THEN
+	                    #obiekt[#x].licznik2 := 0.0;
+	                END_IF;
+	                IF #obiekt[#x].zerujLicznik3 THEN
+	                    #obiekt[#x].licznik3 := 0.0;
+	                END_IF;
+	            END_REGION
+	            
+	        10:    //zawór przełączny "Banjo" "MixProof" i inne ON OFF    ale odwrotnego dzilania  Normalnie otwarty - czyli jk jest niewysterowany to jest open
+	            REGION typ10
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].hmiManualStart AND #obiekt[#x].inZezwolenieNaPracę; //jeżeli tryb ręczny to steruj zawór ze stacyjki
+	                ELSE
+	                    #obiekt[#x].outStartUrządzenie := #obiekt[#x].inStartAuto AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                
+	                //obsługa potwierdzeń otwarcia zamknięcia zaworu
+	                IF NOT #obiekt[#x].inJestPotwWysterowania THEN
+	                    #obiekt[#x].diPotwWysterowania := #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF NOT #obiekt[#x].inJestPotwNiewysterowania THEN
+	                    #obiekt[#x].diPotwNieWysterowania := NOT #obiekt[#x].outStartUrządzenie;
+	                END_IF;
+	                IF #obiekt[#x].hmiSymulujSygnałyWejsciowe THEN
+	                    IF #obiekt[#x].inJestPotwWysterowania THEN
+	                        #obiekt[#x].diPotwWysterowania := #obiekt[#x].hmiSymulacjaPotwNieWysterowania;
+	                    END_IF;
+	                    IF #obiekt[#x].inJestPotwNiewysterowania THEN
+	                        #obiekt[#x].diPotwNieWysterowania := #obiekt[#x].hmiSymulacjaPotwNieWysterowania;
+	                    END_IF;
+	                END_IF;
+	                
+	                //obsługa LiftUp Lift Down w zaworze Mixproof
+	                //
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    #obiekt[#x].outLiftUp := #obiekt[#x].hmiManualLiftUp AND #obiekt[#x].inZezwolenieNaPracę; //jeżeli tryb ręczny to steruj zawór ze stacyjki
+	                ELSE
+	                    #obiekt[#x].outLiftUp := #obiekt[#x].inLiftUp AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                IF #obiekt[#x].hmiTrybAutoManual THEN
+	                    #obiekt[#x].outLiftDown := #obiekt[#x].hmiManualLiftDown AND #obiekt[#x].inZezwolenieNaPracę; //jeżeli tryb ręczny to steruj zawór ze stacyjki
+	                ELSE
+	                    #obiekt[#x].outLiftDown := #obiekt[#x].inLiftDown AND #obiekt[#x].inZezwolenieNaPracę;
+	                END_IF;
+	                
+	                
+	                
+	                // zliczanie czasu awarii gdy nie ma potwierdzenia 
+	                IF #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].diPotwNieWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND NOT #obiekt[#x].diPotwWysterowania
+	                    AND #obiekt[#x].czasDoAwariiPV < 10000 THEN
+	                    #obiekt[#x].czasDoAwariiPV := #obiekt[#x].czasDoAwariiPV + 1;
+	                END_IF;
+	                // wystawienie sygnału awarii
+	                IF #obiekt[#x].czasDoAwariiPV > #obiekt[#x].czasDoAwariiSP THEN
+	                    #obiekt[#x].Awaria := 1;
+	                ELSE
+	                    #obiekt[#x].Awaria := 0;
+	                END_IF;
+	                // kasowanie czasu awarii gdy wszystkie potwierdzenia są ok
+	                IF #obiekt[#x].outStartUrządzenie AND #obiekt[#x].diPotwWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                IF NOT #obiekt[#x].outStartUrządzenie AND #obiekt[#x].diPotwNieWysterowania
+	                THEN
+	                    #obiekt[#x].czasDoAwariiPV := 0;
+	                END_IF;
+	                
+	                
+	                
+	                //stan zaworu
+	                IF #obiekt[#x].hmiTrybAutoManual = 0 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 1;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 3;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 5;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                IF #obiekt[#x].hmiTrybAutoManual = 1 THEN
+	                    IF #obiekt[#x].outStartUrządzenie = 0 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 2;
+	                    END_IF;
+	                    IF #obiekt[#x].outStartUrządzenie = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 4;
+	                    END_IF;
+	                    IF #obiekt[#x].Awaria = 1 THEN
+	                        #obiekt[#x].hmiStanUrządzenia := 6;
+	                    END_IF;
+	                END_IF;
+	                
+	                
+	                
+	                
+	            END_REGION
+	            
+	        ELSE  // Statement section ELSE
+	            ;
+	    END_CASE;
+	    
+	    //obsluga timerkow w obiektach
+	    
+	    
+	    IF #obiekt[#x].SetReset.inSet = 1
+	        AND #obiekt[#x].SetReset.setCzas < #obiekt[#x].SetReset.czasDoSet
+	        THEN
+	            #obiekt[#x].SetReset.setCzas := #obiekt[#x].SetReset.setCzas+ 1;
+	        END_IF;
+	        
+	        IF #obiekt[#x].SetReset.setCzas >= #obiekt[#x].SetReset.czasDoSet
+	        THEN
+	            #obiekt[#x].SetReset.wyjście := 1;
+	        END_IF;
+	        IF NOT #obiekt[#x].SetReset.inSet 
+	        THEN
+	            #obiekt[#x].SetReset.setCzas := 0;
+	        END_IF;
+	   
+	 
+	    //reset
+	        IF #obiekt[#x].SetReset.inReset= 0 
+	        THEN
+	            #obiekt[#x].SetReset.resetCzas := #obiekt[#x].SetReset.czasDoReset+1;
+	        END_IF;
+	       
+	         
+	   
+	        IF #obiekt[#x].SetReset.inReset = 1
+	            AND #obiekt[#x].SetReset.resetCzas > 0
+	        THEN
+	            #obiekt[#x].SetReset.resetCzas := #obiekt[#x].SetReset.resetCzas- 1;
+	            
+	            IF #obiekt[#x].SetReset.resetCzas > #obiekt[#x].SetReset.czasDoReset THEN
+	                #obiekt[#x].SetReset.resetCzas := #obiekt[#x].SetReset.czasDoReset; //zabezpieczenie przed zapamietaniem poprzedniej wartosci
+	            END_IF;
+	        END_IF;
+	        
+	        IF #obiekt[#x].SetReset.resetCzas <= 0
+	        THEN
+	            #obiekt[#x].SetReset.wyjście := 0;
+	           
+	        END_IF;
+	        
+	        
+	        
+	 
+	        
+	
+	    IF #obiekt[#x].procedura = 0 THEN  //obsluga procedury 0
+	        #obiekt[#x].SetReset.resetCzas:= 1;
+	        #obiekt[#x].SetReset.setCzas := 0;
+	        #obiekt[#x].SetReset.wyjście := 0;
+	        IF NOT #obiekt[#x].hmiTrybAutoManual THEN  //tryb manual dla procedury 0
+	            #obiekt[#x].outStartUrządzenie := 0;
+	            #obiekt[#x].inStartAuto := 0;
+	            #obiekt[#x].outWysterowanieUrządzenia := 0.0;
+	            #obiekt[#x].inZadaneWysterowanieAuto := 0.0;
+	            #obiekt[#x].Flipaj.in := 0;
+	        END_IF;
+	    END_IF;
+	    
+	    
+	    IF #obiekt[#x].procedura = 1 THEN  //obsluga procedury 1
+	        #obiekt[#x].SetReset.resetCzas := 1;
+	        #obiekt[#x].SetReset.setCzas := 0;
+	        #obiekt[#x].SetReset.wyjście := 0;
+	        IF NOT #obiekt[#x].hmiTrybAutoManual THEN  //tryb manual dla procedury 0
+	            #obiekt[#x].inStartAuto := 1;
+	            #obiekt[#x].outStartUrządzenie := 1;
+	            #obiekt[#x].outWysterowanieUrządzenia := 100.0;
+	            #obiekt[#x].inZadaneWysterowanieAuto := 100.0;
+	        END_IF;
+	    END_IF;
+	    
+	    
+	    //manual zaworu mixproof odnosnie liftów
+	    
+	    IF #obiekt[#x].hmiTrybAutoManual THEN
+	        IF #obiekt[#x].hmiManualLiftUp = 1 THEN
+	            #obiekt[#x].outLiftUp := 1;
+	        ELSE
+	            #obiekt[#x].outLiftUp := 0;
+	        END_IF;
+	        IF #obiekt[#x].hmiManualLiftDown = 1 THEN
+	            #obiekt[#x].outLiftDown := 1;
+	        ELSE
+	            #obiekt[#x].outLiftDown := 0;
+	        END_IF;
+	    END_IF;
+	    
+	    //////flipaj
+	    IF #obiekt[#x].Flipaj.in THEN
+	        #obiekt[#x].Flipaj.licznik := #obiekt[#x].Flipaj.licznik + 1;
+	    ELSE
+	        #obiekt[#x].Flipaj.licznik := 0;
+	        #obiekt[#x].Flipaj.Q := 0;
+	        #obiekt[#x].Flipaj.licznik_petli := 0;
+	    END_IF;
+	    IF #obiekt[#x].Flipaj.start_od_zera = 1 THEN
+	        IF #obiekt[#x].Flipaj.licznik > 0 + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli)
+	            AND #obiekt[#x].Flipaj.licznik <= #obiekt[#x].Flipaj.czas_OFF + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli) THEN
+	            #obiekt[#x].Flipaj.Q := 0;
+	        END_IF;
+	        
+	        IF (#obiekt[#x].Flipaj.licznik > #obiekt[#x].Flipaj.czas_OFF + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli))
+	            AND #obiekt[#x].Flipaj.licznik <= (#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli)) THEN
+	            #obiekt[#x].Flipaj.Q := 1;
+	        END_IF;
+	        
+	        IF #obiekt[#x].Flipaj.licznik = (#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli)) THEN
+	            #obiekt[#x].Flipaj.licznik_petli := #obiekt[#x].Flipaj.licznik_petli + 1;
+	        END_IF;
+	    END_IF;
+	    
+	    IF #obiekt[#x].Flipaj.start_od_zera = 0 THEN
+	        IF #obiekt[#x].Flipaj.licznik > 0 + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli)
+	            AND #obiekt[#x].Flipaj.licznik <= #obiekt[#x].Flipaj.czas_ON + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli) THEN
+	            #obiekt[#x].Flipaj.Q := 1;
+	        END_IF;
+	        
+	        IF (#obiekt[#x].Flipaj.licznik > #obiekt[#x].Flipaj.czas_ON + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli))
+	            AND #obiekt[#x].Flipaj.licznik <= (#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli)) THEN
+	            #obiekt[#x].Flipaj.Q := 0;
+	        END_IF;
+	        
+	        IF #obiekt[#x].Flipaj.licznik = (#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF + ((#obiekt[#x].Flipaj.czas_ON + #obiekt[#x].Flipaj.czas_OFF) * #obiekt[#x].Flipaj.licznik_petli)) THEN
+	            #obiekt[#x].Flipaj.licznik_petli := #obiekt[#x].Flipaj.licznik_petli + 1;
+	        END_IF;
+	    END_IF;
+	    
+	    IF #obiekt[#x].Flipaj.licznik_petli >= #obiekt[#x].Flipaj.ile_petli THEN
+	        #obiekt[#x].Flipaj.Q := 0;
+	        
+	    END_IF;
+	    
+	    
+	    
+	    
+	    
+	    
+	    // #obiekt[#x].hmiPotwWysterowania := 0;
+	    // #obiekt[#x].hmiPotwNieWysterowania := 0;
+	    
+	    
+	    
+	END_FOR;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION_BLOCK
+
