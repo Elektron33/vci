@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Engineering version="V16" />
+  <DocumentInfo>
+    <Created>2022-01-12T14:34:28.1373866Z</Created>
+    <ExportSetting>WithDefaults</ExportSetting>
+    <InstalledProducts>
+      <Product>
+        <DisplayName>Totally Integrated Automation Portal</DisplayName>
+        <DisplayVersion>V16 Update 4</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>TIA Portal Version Control Interface</DisplayName>
+        <DisplayVersion>V16 Update 2</DisplayVersion>
+      </OptionPackage>
+      <OptionPackage>
+        <DisplayName>TIA Portal Openness</DisplayName>
+        <DisplayVersion>V16 Update 4</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>STEP 7 Professional</DisplayName>
+        <DisplayVersion>V16 Update 4</DisplayVersion>
+      </Product>
+      <OptionPackage>
+        <DisplayName>STEP 7 Safety</DisplayName>
+        <DisplayVersion>V16</DisplayVersion>
+      </OptionPackage>
+      <Product>
+        <DisplayName>WinCC Professional</DisplayName>
+        <DisplayVersion>V16 Update 4</DisplayVersion>
+      </Product>
+    </InstalledProducts>
+  </DocumentInfo>
+  <SW.Types.PlcStruct ID="0">
+    <AttributeList>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v4">
+  <Section Name="None">
+    <Member Name="S" Datatype="Array[1..50] of Bool"><AttributeList><BooleanAttribute Name="ExternalAccessible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalVisible" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="ExternalWritable" SystemDefined="true">true</BooleanAttribute><BooleanAttribute Name="SetPoint" SystemDefined="true">false</BooleanAttribute></AttributeList><Comment><MultiLanguageText Lang="en-US">sygnał</MultiLanguageText></Comment><Subelement Path="1"><Comment><MultiLanguageText Lang="en-US">CIP1</MultiLanguageText></Comment></Subelement><Subelement Path="2"><Comment><MultiLanguageText Lang="en-US">CIP2</MultiLanguageText></Comment></Subelement><Subelement Path="3"><Comment><MultiLanguageText Lang="en-US">CIP3</MultiLanguageText></Comment></Subelement><Subelement Path="4"><Comment><MultiLanguageText Lang="en-US">TANK_CIP</MultiLanguageText></Comment></Subelement><Subelement Path="5"><Comment><MultiLanguageText Lang="en-US">READY1</MultiLanguageText></Comment></Subelement><Subelement Path="6"><Comment><MultiLanguageText Lang="en-US">READY2</MultiLanguageText></Comment></Subelement><Subelement Path="7"><Comment><MultiLanguageText Lang="en-US">READY3</MultiLanguageText></Comment></Subelement><Subelement Path="8"><Comment><MultiLanguageText Lang="en-US">READY4</MultiLanguageText></Comment></Subelement><Subelement Path="9"><Comment><MultiLanguageText Lang="en-US">CONF1</MultiLanguageText></Comment></Subelement><Subelement Path="10"><Comment><MultiLanguageText Lang="en-US">CONF2</MultiLanguageText></Comment></Subelement><Subelement Path="11"><Comment><MultiLanguageText Lang="en-US">CONF3</MultiLanguageText></Comment></Subelement><Subelement Path="12"><Comment><MultiLanguageText Lang="en-US">CONF4</MultiLanguageText></Comment></Subelement><Subelement Path="13"><Comment><MultiLanguageText Lang="en-US">ERR</MultiLanguageText></Comment></Subelement><Subelement Path="14"><Comment><MultiLanguageText Lang="en-US">PULLOUT1</MultiLanguageText></Comment></Subelement><Subelement Path="15"><Comment><MultiLanguageText Lang="en-US">PULLOUT2</MultiLanguageText></Comment></Subelement><Subelement Path="16"><Comment><MultiLanguageText Lang="en-US">PULLOUT3</MultiLanguageText></Comment></Subelement><Subelement Path="17"><Comment><MultiLanguageText Lang="en-US">WATER1</MultiLanguageText></Comment></Subelement><Subelement Path="18"><Comment><MultiLanguageText Lang="en-US">WATER2</MultiLanguageText></Comment></Subelement><Subelement Path="19"><Comment><MultiLanguageText Lang="en-US">WATER3</MultiLanguageText></Comment></Subelement><Subelement Path="20"><Comment><MultiLanguageText Lang="en-US">OUT1</MultiLanguageText></Comment></Subelement><Subelement Path="21"><Comment><MultiLanguageText Lang="en-US">OUT2</MultiLanguageText></Comment></Subelement><Subelement Path="22"><Comment><MultiLanguageText Lang="en-US">OUT3</MultiLanguageText></Comment></Subelement><Subelement Path="23"><Comment><MultiLanguageText Lang="en-US">CONNECT1</MultiLanguageText></Comment></Subelement><Subelement Path="24"><Comment><MultiLanguageText Lang="en-US">CONNECT2</MultiLanguageText></Comment></Subelement><Subelement Path="25"><Comment><MultiLanguageText Lang="en-US">CONNECT3</MultiLanguageText></Comment></Subelement><Subelement Path="26"><Comment><MultiLanguageText Lang="en-US">WHEY</MultiLanguageText></Comment></Subelement><Subelement Path="27"><Comment><MultiLanguageText Lang="en-US">AG</MultiLanguageText></Comment></Subelement><Subelement Path="28"><Comment><MultiLanguageText Lang="en-US">PUMP</MultiLanguageText></Comment></Subelement><Subelement Path="29"><Comment><MultiLanguageText Lang="en-US">FLIP</MultiLanguageText></Comment></Subelement><Subelement Path="30"><Comment><MultiLanguageText Lang="en-US">RUNNING</MultiLanguageText></Comment></Subelement><Subelement Path="31"><Comment><MultiLanguageText Lang="en-US">FEED</MultiLanguageText></Comment></Subelement><Subelement Path="32"><Comment><MultiLanguageText Lang="en-US">START</MultiLanguageText></Comment></Subelement><Subelement Path="33"><Comment><MultiLanguageText Lang="en-US">REMOTE</MultiLanguageText></Comment></Subelement><Subelement Path="34"><Comment><MultiLanguageText Lang="en-US">RINSING</MultiLanguageText></Comment></Subelement><Subelement Path="35"><Comment><MultiLanguageText Lang="en-US">ERR</MultiLanguageText></Comment></Subelement><Subelement Path="36"><Comment><MultiLanguageText Lang="en-US">OUT</MultiLanguageText></Comment></Subelement><Subelement Path="37"><Comment><MultiLanguageText Lang="en-US">ZS01</MultiLanguageText></Comment></Subelement><Subelement Path="38"><Comment><MultiLanguageText Lang="en-US">ZS02</MultiLanguageText></Comment></Subelement><Subelement Path="39"><Comment><MultiLanguageText Lang="en-US">ZS03</MultiLanguageText></Comment></Subelement><Subelement Path="40"><Comment><MultiLanguageText Lang="en-US">ZS04</MultiLanguageText></Comment></Subelement><Subelement Path="41"><Comment><MultiLanguageText Lang="en-US">ZS05</MultiLanguageText></Comment></Subelement></Member>
+  </Section>
+</Sections></Interface>
+      <IsFailsafeCompliant>false</IsFailsafeCompliant>
+      <Name>typSygnały</Name>
+    </AttributeList>
+    <ObjectList>
+      <MultilingualText ID="1" CompositionName="Comment">
+        <ObjectList>
+          <MultilingualTextItem ID="2" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+          <MultilingualTextItem ID="3" CompositionName="Items">
+            <AttributeList>
+              <Culture>pl-PL</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+          <MultilingualTextItem ID="4" CompositionName="Items">
+            <AttributeList>
+              <Culture>ru-RU</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+      <MultilingualText ID="5" CompositionName="Title">
+        <ObjectList>
+          <MultilingualTextItem ID="6" CompositionName="Items">
+            <AttributeList>
+              <Culture>en-US</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+          <MultilingualTextItem ID="7" CompositionName="Items">
+            <AttributeList>
+              <Culture>pl-PL</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+          <MultilingualTextItem ID="8" CompositionName="Items">
+            <AttributeList>
+              <Culture>ru-RU</Culture>
+              <Text />
+            </AttributeList>
+          </MultilingualTextItem>
+        </ObjectList>
+      </MultilingualText>
+    </ObjectList>
+  </SW.Types.PlcStruct>
+</Document>
