@@ -1,0 +1,69 @@
+﻿FUNCTION_BLOCK "FB_obsluga_sygnałów"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR DB_SPECIFIC
+      sygnał { S7_SetPoint := 'False'} : Array[0..99] of "typSygnałONOFF";   // instancje nazwij np.F1.sygnały
+   END_VAR
+   VAR 
+      x { S7_SetPoint := 'True'} : Int;
+   END_VAR
+
+
+BEGIN
+	//program obsługuje sygnały rozpoznaje ich typy i wykonuje odpowiednie akcje
+	//zeruje timery
+	//przelicza wartości
+	//wykonuje procedure [0] i [1] dla każdego sygnału
+	
+	
+	
+	FOR #x := 1 TO 99 DO
+	    
+	    
+	    IF #sygnał[#x].procedura = 1 THEN  //obsluga procedury 1
+	        #sygnał[#x].inStart := 1;
+	    
+	    END_IF;
+	    IF #sygnał[#x].procedura = 0 THEN  //obsluga procedury 0
+	        #sygnał[#x].inStart := 0;
+	    END_IF;
+	    
+	    IF #sygnał[#x].hmiTrybAutoManual THEN  //tryb manual
+	        #sygnał[#x].outStart := #sygnał[#x].hmiManualStart;
+	    ELSE
+	        #sygnał[#x].outStart := #sygnał[#x].inStart;//tryb auto
+	    END_IF;
+	    
+	    // stan urządzenia DO stacyjki
+	    IF #sygnał[#x].outStart THEN
+	        #sygnał[#x].hmiStanUrządzenia := 3;
+	    ELSE
+	        #sygnał[#x].hmiStanUrządzenia := 1;
+	    END_IF;
+	    // stan urządzenia DO stacyjki w trybie recznym
+	    IF #sygnał[#x].hmiTrybAutoManual THEN
+	        IF #sygnał[#x].outStart THEN
+	            #sygnał[#x].hmiStanUrządzenia := 4;
+	        ELSE
+	            #sygnał[#x].hmiStanUrządzenia := 2;
+	        END_IF;
+	    END_IF;
+	        
+	        
+	        
+	    END_FOR;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION_BLOCK
+
