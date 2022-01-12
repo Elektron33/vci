@@ -1,0 +1,175 @@
+﻿FUNCTION_BLOCK "FB_RecepturyStacjaMycia"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      numerWyswietlanejReceptury : Int := 1;   // nowy numer receptury powoduje odcvzytanie receptury  o nowym numerze i skopiowanie do receptury 0
+      staryNumerWyswietlanejReceptury : Int := 1;   // stary numer do kontroli triggera wspisywania nowego numeru
+      "klawiszReceptura+1" : Bool := FALSE;
+      "klawiszReceptura-1" : Bool := FALSE;
+      numerUżywanejReceptury : Int := 1;   // numer używanej receptury
+      klawiszKopiujRecepturę : Bool := FALSE;   // kopiuje recepture 0 do receptury 99
+      klawiszWklejSkopiowanąRecepturę : Bool := FALSE;   // kopiuje recepture 99 do wyswietlanej receptury
+      klawiszZapiszRecepturę : Bool := FALSE;   // zapisuje receprure wyswietlaną  rec 0 do receptury o wybranym numerze
+      klawiszUżyjTejReceptury : Bool := FALSE;   // klawisz wpisuje do programu numer uzytej receptury
+      numerKrokuMycia : Int := 0;   // krok mycia- numer kroku receptury dodatkowo wpisywany w krokach mycia
+      numerWyswietlanegoKroku : Int;
+      staryNumerWyswietlanegoKroku : Int;
+      "klawiszKrok+1" : Bool;
+      "klawiszKrok-1" : Bool;
+      "___" : Bool := FALSE;
+      bPokazOknoWyboruReceptury : Bool := FALSE;   // sygnał do HMI żeby pokazać okno tabelę wyboru receptury
+   END_VAR
+   VAR RETAIN
+      Receptura : Array[0..20] of "typRecepturaStacjiMycia";
+   END_VAR
+   VAR 
+      "receptura-1" {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      "receptura+1" {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      wybór_recept {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      kopiuj {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      wklej {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      zapisz {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      użyj {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      "krok+" {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      "krok-" {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      wybór_kroku {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      licznik_1 { S7_SetPoint := 'True'} : Int;   // taki liczniczek w razie co
+      licznikDoAlarmu : Real;
+   END_VAR
+
+
+BEGIN
+	//program służy do zasilenia receptury [0] która jest wyswietlana
+	//i do kopiowania i zapisu receptur /kopia do receptury 20
+	
+	
+	
+	REGION //obsługa klawiszy receptura +  receptura-
+	    #"receptura-1"(CLK := #"klawiszReceptura-1");
+	    #"receptura+1"(CLK := #"klawiszReceptura+1");
+	    IF #numerWyswietlanejReceptury < 1 THEN
+	        #numerWyswietlanejReceptury := #staryNumerWyswietlanejReceptury;
+	    END_IF;
+	    IF #numerWyswietlanejReceptury > 19 THEN
+	        #numerWyswietlanejReceptury := #staryNumerWyswietlanejReceptury;
+	    END_IF;
+	    IF #"receptura-1".Q = 1 AND #numerWyswietlanejReceptury > 1 THEN
+	        #numerWyswietlanejReceptury := #numerWyswietlanejReceptury - 1;
+	        ;
+	    END_IF;
+	    IF #"receptura+1".Q = 1 AND #numerWyswietlanejReceptury < 19 THEN
+	        #numerWyswietlanejReceptury := #numerWyswietlanejReceptury + 1;
+	        ;
+	    END_IF;
+	END_REGION
+	
+	
+	REGION //obsługa klawiszy krok +  krok-
+	    #"krok-"(CLK := #"klawiszKrok-1");
+	    #"krok+"(CLK := #"klawiszKrok+1");
+	    IF #numerWyswietlanegoKroku < 1 THEN
+	        #numerWyswietlanegoKroku := 1;
+	    END_IF;
+	    IF #numerWyswietlanegoKroku > 6 THEN
+	        #numerWyswietlanegoKroku := 6;
+	    END_IF;
+	    IF #"krok-".Q = 1 AND #numerWyswietlanegoKroku > 1 THEN
+	        #numerWyswietlanegoKroku := #numerWyswietlanegoKroku - 1;
+	        ;
+	    END_IF;
+	    IF #"krok+".Q = 1 AND #numerWyswietlanegoKroku < 6 THEN
+	        #numerWyswietlanegoKroku := #numerWyswietlanegoKroku + 1;
+	        ;
+	    END_IF;
+	END_REGION
+	
+	REGION //gdy ktoś zmieni numer receptury to przepisz zawartość wybranej do receptury 0 (wyświetlanej na panelu)
+	    #wybór_recept(CLK := (#numerWyswietlanejReceptury <> #staryNumerWyswietlanejReceptury));
+	    IF #wybór_recept.Q THEN
+	        #Receptura[0] := #Receptura[#numerWyswietlanejReceptury];
+	        #Receptura[0].nazwaReceptury:=#Receptura[#numerWyswietlanejReceptury].nazwaReceptury;
+	        
+	        
+	    END_IF;
+	    #staryNumerWyswietlanejReceptury := #numerWyswietlanejReceptury;
+	    
+	    IF #wybór_recept.Q THEN
+	        #numerWyswietlanegoKroku:= 1;
+	        #staryNumerWyswietlanegoKroku := 1;
+	        #Receptura[0].Krok[0] := #Receptura[0].Krok[#numerWyswietlanegoKroku];
+	    END_IF;
+	END_REGION
+	
+	
+	
+	
+	REGION //gdy ktoś zmieni numer kroku to przepisz zawartość wybranego kroku do kroku 0 (wyświetlanego na panelu)
+	    #wybór_kroku(CLK := (#numerWyswietlanegoKroku <> #staryNumerWyswietlanegoKroku));
+	    
+	    // IF #wybór_kroku.Q THEN
+	    //     #Receptura[0].Krok[#staryNumerWyswietlanegoKroku] := #Receptura[0].Krok[0];
+	    // END_IF;
+	    
+	    IF #wybór_kroku.Q THEN
+	        #Receptura[0].Krok[0] := #Receptura[0].Krok[#numerWyswietlanegoKroku];
+	    END_IF;
+	    
+	    #staryNumerWyswietlanegoKroku := #numerWyswietlanegoKroku;
+	END_REGION
+	
+	
+	
+	REGION //operacje kopiuj wklej uzyj
+	    #kopiuj(CLK := #klawiszKopiujRecepturę);
+	    IF #kopiuj.Q THEN
+	        #Receptura[20] := #Receptura[0];
+	    END_IF;
+	    
+	    #wklej(CLK := #klawiszWklejSkopiowanąRecepturę);
+	    IF #wklej.Q THEN
+	        #Receptura[0] := #Receptura[20];
+	        // "RecepturyMycia".Receptura[0] := "RecepturyMycia".Receptura["RecepturyMycia".numerWyswietlanejReceptury];
+	    END_IF;
+	    
+	    #zapisz(CLK := #klawiszZapiszRecepturę);
+	    
+	    IF #zapisz.Q THEN // AND #krokMycia = 0   --zapis mozliwy tylko gdy nie wykonuje sie mycie
+	        #Receptura[0].Krok[#numerWyswietlanegoKroku] := #Receptura[0].Krok[0];
+	        
+	        #Receptura[#numerWyswietlanejReceptury] := #Receptura[0];
+	        
+	    END_IF;
+	    
+	    #użyj(CLK := #klawiszUżyjTejReceptury);
+	    IF #użyj.Q THEN
+	        #numerUżywanejReceptury := #numerWyswietlanejReceptury;
+	    END_IF;
+	END_REGION
+	
+	//kasowanie tymczasowych
+	//
+	#"klawiszReceptura-1" := 0;
+	#"klawiszReceptura+1" := 0;
+	#klawiszKopiujRecepturę := 0;
+	#klawiszWklejSkopiowanąRecepturę := 0;
+	#klawiszZapiszRecepturę := 0;
+	#"klawiszKrok+1" := 0;
+	#"klawiszKrok-1" := 0;
+	//opuznienie kasowania klawisza wybrania receptury ,zeby program nadrzedny
+	//zdazyl zauwazyc stan tego klawisza w HMi klawisz ma być typu set
+	IF #klawiszUżyjTejReceptury = 1 THEN
+	    
+	    #licznik_1:=
+	    #licznik_1+1;
+	    
+	    IF #licznik_1 > 5 THEN
+	        #klawiszUżyjTejReceptury := 0;
+	        #licznik_1 := 0;
+	    END_IF;
+	    
+	END_IF;
+	
+	
+	
+END_FUNCTION_BLOCK
+

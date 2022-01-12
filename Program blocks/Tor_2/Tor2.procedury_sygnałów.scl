@@ -1,0 +1,247 @@
+﻿FUNCTION "Tor2.procedury_sygnałów" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      x : Int;
+      y : Int;
+      numerProcedury : Int;
+      indexKroku : Int;
+      numerObiektu : Int;
+      aktualnyNumerReceptury : Int;
+      aktualnyKrokMycia : Int;
+   END_VAR
+
+   VAR CONSTANT 
+      "1" : Int := 1;
+      CIP2 : Int := 2;
+      CIP3 : Int := 3;
+      TANK_CIP : Int := 4;
+      READY1 : Int := 5;
+      READY2 : Int := 6;
+      READY3 : Int := 7;
+      CONF1 : Int := 8;
+      CONF2 : Int := 9;
+      ERR : Int := 10;
+      PULLOUT1 : Int := 11;
+      PULLOUT2 : Int := 12;
+      PULLOUT3 : Int := 13;
+      WATER1 : Int := 14;
+      WATER2 : Int := 15;
+      WATER3 : Int := 16;
+      OUT1 : Int := 17;
+      OUT2 : Int := 18;
+      OUT3 : Int := 19;
+      CONNECT1 : Int := 20;
+      CONNECT2 : Int := 21;
+      CONNECT3 : Int := 22;
+      WHEY : Int := 23;
+      AG : Int := 24;
+      PUMP : Int := 25;
+      FLIP : Int := 26;
+      S1_RUNNING : Int := 27;
+      S1_FEED : Int := 28;
+      S1_START : Int := 29;
+      S1_REMOTE : Int := 30;
+      S1_RINSING : Int := 31;
+      S1_ERR : Int := 32;
+      S1_OUT : Int := 33;
+   END_VAR
+
+
+BEGIN
+	
+	// //=============================================================================
+	// // Mlekomat Sp. z o.o.// (c)Copyright (2019)
+	// //-----------------------------------------------------------------------------
+	// // Biblioteka: Orzeł-Piotr Kowalski
+	// // Testowano za pomocą: PLCSIM Advanced v.2.0 sp1
+	// // Engineering: TIA Portal 15.1
+	// // Ograniczenia: (typy bloków OB, itp.)
+	// // Wymagania: (sprzęt, pamięć, itp.)
+	// // Funkcjonalność:  Odczytanie z tablicy  "F1.sygnały.1_99.krok" numeru procedury
+	// // dla każdego sygnału "Sygnały".F[1]....   i zastosowanie oewj procedury - zgodnie
+	// // z dokumentem FD od technologa
+	// //----------------------------------------------------------------------------
+	// // Zmiany w logu:
+	// // Wersja Data Autor Data wprowadzenia zmian
+	// // 01.00.00 15.03.2019 Piotr Kowalski//
+	// //=============================================================================
+	
+	// //program zawiera procedury dla sygnałów dla procedur o numerze >1  (procedura 0 i 1 jest obsługiwana w programie FB_obsługa sygnałów)
+	// //procedury wyzwalane  z progrmu TablicaProcedór dla kolejnych kroków  "F1".obiekt["F100CP01"].procedura: = 2
+	// //wyzwolenie procedury zero  automatycznie  wyłącza sygnał
+	// //procedura:=1   wyzwala sygnał SET -- obsługiwana jest w programie FB obsłóga sygnałów
+	// //
+	// //
+	// //open ctrl+shift+(*)Numeric
+	// //close ctrl+shift+(/)Numeric
+	// //
+	
+	// #aktualnyNumerReceptury := "CIP1_RecepturyStacjaMycia".numerUżywanejReceptury;
+	// #aktualnyKrokMycia := "CIP1_RecepturyStacjaMycia".numerKrokuMycia;
+	
+	
+	
+	
+	
+	
+	// CASE "CIP1_sygnały".sygnał[#"1"].procedura OF
+	        
+	//     2:
+	//         IF "CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[21] = 1 THEN
+	//             IF
+	//                 ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 2101
+	//                 AND "SIG".SIG[2101]=1)
+	//                 OR ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 2102
+	//                 AND "SIG".SIG[2102]=1)
+	//                 OR ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 3101
+	//                 AND "SIG".SIG[3101]=1)
+	//                 OR ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 3102
+	//                 AND "SIG".SIG[3102]=1)
+	//                 OR ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 9401
+	//                 AND "SIG".SIG[9401]=1)
+	//                 OR ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 9501
+	//                 AND "SIG".SIG[9501]=1)
+	//                 OR ("CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24] = 4101
+	//                 AND "SIG".SIG[4101]=1)
+	//             THEN
+	//                 "CIP1_sygnały".sygnał[#"1"].inStart := 1;
+	//             END_IF;
+	//             ;
+	//         END_IF;
+	//     0:
+	//         "CIP1_sygnały".sygnał[#"1"].inStart := 0;
+	        
+	// END_CASE;
+	// "SIG".SIG[7101] := BOOL_TO_INT("CIP1_sygnały".sygnał[#"1"].inStart);
+	
+	// CASE "CIP1_sygnały".sygnał[#OUT1].procedura OF
+	        
+	//     2:
+	        
+	      
+	//         "CIP1_sygnały".sygnał[#OUT1].inStart := "CIP1_obiekty".obiekt["C101AV13"].outStartUrządzenie;
+	    
+	//         ;
+	//     0:
+	//         "CIP1_sygnały".sygnał[#OUT1].inStart := 0;
+	        
+	// END_CASE;
+	// "SIG".SIG[7120] := BOOL_TO_INT("CIP1_sygnały".sygnał[#OUT1].inStart);
+	
+	
+	// CASE "CIP1_sygnały".sygnał[#AG].procedura OF
+	        
+	//     2:
+	//         "Flipaj_cip1_sygnał_AG"(ile_petli := 999,
+	//                                 czas_ON   := 100,
+	//                                 czas_OFF  := 600);
+	        
+	        
+	//         IF "CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23]=1 THEN
+	//             "Flipaj_cip1_sygnał_AG".in := 1;
+	//             "CIP1_sygnały".sygnał[#AG].inStart := "Flipaj_cip1_sygnał_AG".Q;
+	//         ELSE
+	//             "Flipaj_cip1_sygnał_AG".in := 0;
+	//         END_IF;
+	//     0:
+	//         "Flipaj_cip1_sygnał_AG".in := 0;
+	//         "CIP1_sygnały".sygnał[#AG].inStart := 0;
+	// END_CASE;
+	// "SIG".SIG[7127] := BOOL_TO_INT("CIP1_sygnały".sygnał[#AG].inStart);
+	
+	
+	// CASE "CIP1_sygnały".sygnał[#FLIP].procedura OF
+	        
+	//     2:
+	//         "Flipaj_cip1_sygnał_FLIP"(ile_petli := 999,
+	//                                 czas_ON   := 300,
+	//                                 czas_OFF  := 600);
+	        
+	        
+	//       // IF "CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 1
+	//           IF 1=1
+	//       THEN
+	//             "Flipaj_cip1_sygnał_FLIP".in := 1;
+	//             "CIP1_sygnały".sygnał[#FLIP].inStart := "Flipaj_cip1_sygnał_FLIP".Q;
+	//         ELSE
+	//             "Flipaj_cip1_sygnał_FLIP".in := 0;
+	//         END_IF;
+	//     0:
+	     
+	//         "CIP1_sygnały".sygnał[#FLIP].inStart := 0;
+	//         "Flipaj_cip1_sygnał_FLIP"(in:=0,
+	//                                   ile_petli := 999,
+	//                                   czas_ON := 300,
+	//                                   czas_OFF := 600);
+	// END_CASE;
+	// "SIG".SIG[7128] := BOOL_TO_INT("CIP1_sygnały".sygnał[#FLIP].inStart);
+	
+	
+	// CASE "CIP1_sygnały".sygnał[#PUMP].procedura OF
+	        
+	//     2:
+	        
+	        
+	//         IF "CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 1
+	//             AND "licznik_1" < "CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[9] * 10
+	//         THEN
+	//             "licznik_1" := "licznik_1" + 1;
+	//             IF "licznik_1" >= "CIP1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[9] * 10
+	//             THEN
+	//                 "CIP1_sygnały".sygnał[#PUMP].inStart := 1;
+	//             END_IF;
+	            
+	//         END_IF;
+	//     0:
+	//         "CIP1_sygnały".sygnał[#PUMP].inStart := 0;
+	//         "licznik_1" := 0;
+	// END_CASE;
+	// "SIG".SIG[7129] := BOOL_TO_INT("CIP1_sygnały".sygnał[#PUMP].inStart);
+	
+	
+	
+	// IF "CIP1_hmi".button.bPauza.set THEN
+	//     "SIG".SIG[7127] := 0;
+	//     "SIG".SIG[7128] := 0;
+	//     "SIG".SIG[7129] := 0;
+	// END_IF;
+	
+	
+	// "SIG".SIG[7161] := "CIP1_program".program.numerKroku;
+	
+	// //s1.rinsing
+	// IF "CIP1_program".program.numerKroku = 7210
+	//     OR "CIP1_program".program.numerKroku = 7220
+	//     OR "CIP1_program".program.numerKroku = 7250
+	//     OR "CIP1_program".program.numerKroku = 7270
+	//     OR "CIP1_program".program.numerKroku = 7282
+	    
+	// THEN
+	//     "SIG".SIG[7134] := 1;
+	// ELSE
+	//     "SIG".SIG[7134] := 0;
+	// END_IF;
+	// //s1.out
+	// IF ("CIP1_program".program.numerKroku >= 7240
+	//     AND "CIP1_program".program.numerKroku <= 7246)
+	//     OR "CIP1_program".program.numerKroku = 7280
+	//     OR "CIP1_program".program.numerKroku = 7281
+	    
+	    
+	// THEN
+	//     "SIG".SIG[7136] := 1;
+	// ELSE
+	//     "SIG".SIG[7136] := 0;
+	// END_IF;
+	    
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

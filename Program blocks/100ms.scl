@@ -1,0 +1,21 @@
+﻿ORGANIZATION_BLOCK "100ms"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//hw config - obsluga obiektow
+	"Cip"();//obsluga obiektow
+	"Cip.wejwyj"();//obsluga wej wyj
+	
+	//wywołanie programów 
+	"Tor1.aMAIN"();
+	"Tor2.aMAIN"();
+	"Tor0.aMAIN"();
+	
+	
+	// "hmi_alarm" := NOT "diSAFETY";//wykrzyknik na panelu hmi
+	"hmi_alarm" := 0;
+	
+	
+END_ORGANIZATION_BLOCK
+

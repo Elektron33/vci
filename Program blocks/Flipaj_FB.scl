@@ -1,0 +1,77 @@
+﻿FUNCTION_BLOCK "Flipaj_FB"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      in { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      ile_petli { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;   // że filpanie ma dziać się w kółko
+      start_od_zera { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;   // że po wyzwoleniu jest najpierw OFF
+      czas_ON { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;   // czas załączenia wyjścia 0.1 s
+      czas_OFF { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;   // czas wyłączenia wyjścia 0.1s
+   END_VAR
+
+   VAR_OUTPUT 
+      Q { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+   END_VAR
+
+   VAR 
+      licznik { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : LInt;
+      licznik_petli { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+
+
+BEGIN
+	        IF #licznik > (#licznik_petli+1) * (#czas_ON + #czas_OFF) THEN
+	            #in := 0;
+	        END_IF;
+	
+	IF #in THEN
+	    #licznik := #licznik + 1;
+	ELSE
+	    #licznik := 0;
+	    #Q:=0;
+	    #licznik_petli := 0;
+	END_IF;
+	
+	
+	    
+	IF #start_od_zera=1 THEN
+	    IF #licznik > 0 + ((#czas_ON + #czas_OFF) * #licznik_petli)
+	        AND #licznik <= #czas_OFF + ((#czas_ON + #czas_OFF) * #licznik_petli) THEN
+	        #Q := 0;
+	    END_IF;
+	    
+	    IF (#licznik > #czas_OFF + ((#czas_ON + #czas_OFF) * #licznik_petli))
+	        AND #licznik <= (#czas_ON + #czas_OFF + ((#czas_ON + #czas_OFF) * #licznik_petli)) THEN
+	        #Q := 1;
+	    END_IF;
+	    
+	    IF #licznik = (#czas_ON + #czas_OFF + ((#czas_ON + #czas_OFF) * #licznik_petli)) THEN
+	        #licznik_petli := #licznik_petli + 1;
+	    END_IF;
+	END_IF;
+	        
+	IF #start_od_zera=0 THEN
+	    IF #licznik > 0 + ((#czas_ON + #czas_OFF) * #licznik_petli)
+	        AND #licznik <= #czas_ON + ((#czas_ON + #czas_OFF) * #licznik_petli) THEN
+	        #Q := 1;
+	    END_IF;
+	    
+	    IF (#licznik > #czas_ON+ ((#czas_ON + #czas_OFF) * #licznik_petli))
+	        AND #licznik <= (#czas_ON + #czas_OFF + ((#czas_ON + #czas_OFF) * #licznik_petli)) THEN
+	        #Q := 0;
+	    END_IF;
+	    
+	    IF #licznik = (#czas_ON + #czas_OFF + ((#czas_ON + #czas_OFF) * #licznik_petli)) THEN
+	        #licznik_petli := #licznik_petli + 1;
+	    END_IF;
+	END_IF;
+	        
+	        IF #licznik_petli >= #ile_petli THEN
+	            #Q := 0;
+	    
+	        END_IF;
+	    
+	  
+	
+END_FUNCTION_BLOCK
+

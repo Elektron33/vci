@@ -1,0 +1,1669 @@
+﻿FUNCTION "Tor2.kroki" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      fdsf : Int;
+      doSkasowania : Int;
+      aktualnyNumerReceptury : Int;
+      aktualnyKrokMycia : Int;
+      sygnały_S1_czujnik_S1M1ZS02 : Bool;
+   END_VAR
+
+
+BEGIN
+	    #aktualnyNumerReceptury := "Tor2_RecepturyStacjaMycia".numerUżywanejReceptury;
+	    #aktualnyKrokMycia := "Tor2_RecepturyStacjaMycia".numerKrokuMycia;
+	    "Tor2_program".program.numerKrMycia := "Tor2_RecepturyStacjaMycia".numerKrokuMycia;
+	    "linia1_pompa_zezwolenie" := 1;
+	    
+	
+	    
+	    IF
+	        "Tor2_hmi".button.bStop.set = 1
+	        // OR "diSAFETY"=0
+	    THEN
+	        "Tor2_program".program.numerKroku :=7100;
+	        "Tor2_hmi".button.bStop.set := 0;
+	        "Tor2_hmi".button.bStart.set := 0;
+	        "Tor2_hmi".button.bProdukcja.set := 0;
+	        "Tor2_hmi".button.bPrzygotowanie.set := 0;
+	        "Tor2_hmi".button.bPullout.set := 0;
+	        "Tor2_hmi".button.bCyrkulacja.set := 0;
+	        "Tor2_hmi".button.bFlux.set := 0;
+	        "Tor2_hmi".button.bCip.set := 0;
+	    END_IF;
+	    
+	    
+	    "Tor2_hmi".button.bStop.kolor := BOOL_TO_INT("Tor2_hmi".button.bStop.set);
+	    "Tor2_hmi".button.bStart.kolor:= BOOL_TO_INT("Tor2_hmi".button.bStart.set) ;
+	    "Tor2_hmi".button.bProdukcja.kolor := BOOL_TO_INT("Tor2_hmi".button.bProdukcja.set) ;
+	    "Tor2_hmi".button.bPrzygotowanie.kolor := BOOL_TO_INT("Tor2_hmi".button.bPrzygotowanie.set);
+	    "Tor2_hmi".button.bPullout.kolor :=BOOL_TO_INT("Tor2_hmi".button.bPullout.set) ;
+	    "Tor2_hmi".button.bCyrkulacja.kolor := BOOL_TO_INT("Tor2_hmi".button.bCyrkulacja.set);
+	    "Tor2_hmi".button.bFlux.kolor := BOOL_TO_INT("Tor2_hmi".button.bFlux.set);
+	    "Tor2_hmi".button.bCip.kolor :=BOOL_TO_INT("Tor2_hmi".button.bCip.set) ;
+	    "Tor2_hmi".button.bPauza.kolor := BOOL_TO_INT("Tor2_hmi".button.bPauza.set AND "Clock_1Hz")*2;
+	    
+	
+	    
+	    
+	    CASE "Tor2_program".program.numerKroku OF
+	            
+	        0: //inicjalizacja   
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7100,
+	                         inZadaneOpóżnienie   := 1,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	        7100://Postój
+	            
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            IF
+	                "Tor2_hmi".button.bStart.set = 1
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7200,
+	                             inZadaneOpóżnienie   := 1,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 1;
+	            END_IF;
+	            
+	            IF
+	                "Tor2_hmi".button.bPrzygotowanie.set = 1
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7300,
+	                             inZadaneOpóżnienie   := 1,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 3;
+	            END_IF;
+	            
+	            IF
+	                "Tor2_hmi".button.bCip.set = 1
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7400,
+	                             inZadaneOpóżnienie := 1,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 1;
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := 0;
+	            "Tor2_program".program.aktualna1 := 0;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	           
+	            
+	            
+	            
+	        7200://Zaczytanie numeru receptury (program ustawia Krok mycia =1)
+	            
+	            IF "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury = 0 THEN
+	                "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury := 1;
+	            END_IF;
+	            IF
+	                "Tor2_RecepturyStacjaMycia".klawiszUżyjTejReceptury = 1
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7201,
+	                             inZadaneOpóżnienie := 0,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	                "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury := 0;
+	               
+	                #doSkasowania := 1;
+	                
+	
+	                
+	                
+	            END_IF;
+	            "Tor2_program".program.zadana1 := 0;
+	            "Tor2_program".program.aktualna1 := 0;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	            
+	            #aktualnyNumerReceptury := "Tor2_RecepturyStacjaMycia".numerWyswietlanejReceptury;
+	            IF "Tor2_RecepturyStacjaMycia"."klawiszReceptura-1" OR "Tor2_RecepturyStacjaMycia"."klawiszReceptura+1" THEN
+	                "Tor2_hmi".bPomińŁugowanie := NOT
+	                INT_TO_BOOL("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[3].PM[2]);
+	                "Tor2_hmi".bPomińKwasowanie := NOT
+	                INT_TO_BOOL("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[4].PM[2]);
+	                "Tor2_hmi".bPomińDesynfekcje := NOT
+	                INT_TO_BOOL("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[6].PM[2]);
+	            END_IF;
+	         7201: //      Potwierdzenie gotowości obiektu
+	             #aktualnyNumerReceptury := #aktualnyNumerReceptury;
+	             #aktualnyKrokMycia := #aktualnyKrokMycia;
+	             "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23]:=
+	             "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] ;
+	            // jeżeli wybrano sprawdzenie czujnika
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[21] = 1
+	                //sprawdzenie czujnika dla wybranego obiektu
+	            THEN
+	                //jezeli wybrano obiekt do mycia numer 1234
+	                IF 
+	                    // "SIG".SIG[
+	                    // REAL_TO_INT("Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24])]=1
+	                    //i jest sygnał z czujnika
+	                    //AND #sygnały_S1_czujnik_S1M1ZS02 = 1
+	                    //
+	                    "CipSignals".Object[
+	                    REAL_TO_INT("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24])].toCip.bReadyToCip=1
+	                    THEN
+	                    "IdźDoKroku"(inNumerKrokuDocelowy := 7202,
+	                                 inZadaneOpóżnienie   := 5,
+	                                 numerKroku           := "Tor2_program".program.numerKroku,
+	                                 opóźnienie           := "Tor2_program".program.opóżnienie,
+	                                 pauza:=  "Tor2_hmi".button.bPauza.set);
+	                END_IF;
+	            ELSE
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7202,
+	                             inZadaneOpóżnienie := 10,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23];
+	            "Tor2_program".program.aktualna1 := 0;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24];
+	            "Tor2_program".program.aktualna2 := BOOL_TO_INT("CipSignals".Object[
+	            REAL_TO_INT("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24])].toCip.bReadyToCip);
+	            
+	        7202://Drenaż zbiornika
+	            
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7210,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT(  "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 0
+	            THEN
+	                "Tor2_program".program.numerKroku := 7210;
+	            END_IF;
+	           
+	            
+	            
+	        7210: //płukanie zimne
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7220;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7220;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	        7220: //płukanie ciepłe
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7230;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                AND
+	                "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	                
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	               
+	                
+	                "linia1_pompa_zezwolenie" := 0;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7221,
+	                             inZadaneOpóżnienie := 9,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	                
+	                // "CIP1_RecepturyStacjaMycia".numerKrokuMycia :=
+	                // "CIP1_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	            
+	        7221:
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            "Tor2_program".program.numerKroku := 7230;
+	            
+	            
+	        7230://sprawdzenie kroku mycia)
+	            
+	            IF
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia < 5
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7240,
+	                             inZadaneOpóżnienie   := 1,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            IF
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia >= 5
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7270,
+	                             inZadaneOpóżnienie   := 1,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                "Tor2_hmi".button.bCip.set := 0;
+	            END_IF;
+	            "Tor2_program".program.zadana1 := 0;
+	            "Tor2_program".program.aktualna1 := 0;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	        7240://Wypełnienie linii do zbiornika 
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	                
+	                OR (#aktualnyKrokMycia=3 AND "Tor2_hmi".bPomińŁugowanie)
+	                OR (#aktualnyKrokMycia=4 AND "Tor2_hmi".bPomińKwasowanie)
+	                OR (#aktualnyKrokMycia=6 AND "Tor2_hmi".bPomińDesynfekcje)
+	           
+	                
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7260;
+	            END_IF;
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 0
+	                AND "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] =1
+	            THEN
+	                
+	                "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].inStartAuto := 0;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7242,
+	                             inZadaneOpóżnienie := 0.2,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[8]
+	                AND "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 1
+	               
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	               
+	                
+	                "linia1_pompa_zezwolenie" := 0;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7239,
+	                             inZadaneOpóżnienie := 9,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[8];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	            ;
+	        7239:
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            "Tor2_program".program.numerKroku := 7241;
+	            
+	            
+	            
+	        7241://Drenaż zbiornika
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 0
+	            THEN
+	                "Tor2_program".program.numerKroku := 7242;
+	            END_IF;
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7242,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	            
+	            
+	            
+	        7242: //Wypełnienie obiegu środkiem myjącym
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	            THEN
+	                "Tor2_program".program.numerKroku := 7243;
+	                
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	        7243://    Odliczanie czasu mycia
+	            
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                AND
+	                "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	            THEN
+	                ;
+	            ELSE
+	                "Tor2_program".program.opóżnienie := "Tor2_program".program.opóżnienie -0.1;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7244,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[6],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[6];
+	            "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	            
+	            
+	        7244:// Wypełnienie linii do zbiornika wodą
+	            
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 0
+	            THEN
+	                "Tor2_program".program.numerKroku := 7246;
+	            END_IF;
+	            
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[8]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7245;
+	            END_IF;
+	            
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[8];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	            
+	        7245: //Drenaż zbiornika
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 0
+	            THEN
+	                "Tor2_program".program.numerKroku := 7246;
+	            END_IF;
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7246,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	        7246://             Zawracanie środka myjącego
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru<
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7250,
+	                             inZadaneOpóżnienie := 3,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                
+	            END_IF;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	       
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	            
+	        7250://    Płukanie międzyfazowe
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                AND
+	                "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	               
+	                
+	                "linia1_pompa_zezwolenie" := 0;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7251,
+	                             inZadaneOpóżnienie := 0,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	        7251:
+	            
+	        
+	            "Tor2_program".program.numerKroku := 7260;
+	            
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            
+	        7260://KONIEC MYCIA
+	            
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7230,
+	                         inZadaneOpóżnienie   := 0,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            "Tor2_program".program.zadana1 := 0;
+	            "Tor2_program".program.aktualna1 := 0;
+	            "Tor2_program".program.zadana2 := 10;
+	            "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	            
+	        7270://Płukanie główne
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7280;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	              
+	                
+	                "linia1_pompa_zezwolenie" := 0;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7271,
+	                             inZadaneOpóżnienie := 9,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	                
+	                
+	              
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	        7271:
+	            
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            "Tor2_program".program.numerKroku := 7280;
+	            
+	        7280://Uruchomienie dezynfekcji
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 6;
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[1] = 0
+	                OR (#aktualnyKrokMycia = 6 AND "Tor2_hmi".bPomińDesynfekcje)
+	            THEN
+	                
+	                
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7289,
+	                             inZadaneOpóżnienie := 30,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	                
+	            ELSE
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7281,
+	                             inZadaneOpóżnienie := 30,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	            
+	        7281://napełnianie zbironika dezynfekcji
+	            
+	            
+	            
+	            IF "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.poziomAnalogowy].WartośćPomiaru > 50
+	            THEN
+	                
+	                
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7282,
+	                             inZadaneOpóżnienie := 1,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            "Tor2_program".program.zadana1 := 50;
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.poziomAnalogowy].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            
+	        7282://dozowanie dezynfekanta
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7283,
+	                         inZadaneOpóżnienie := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[20],
+	                         numerKroku := "Tor2_program".program.numerKroku,
+	                         opóźnienie := "Tor2_program".program.opóżnienie,
+	                         pauza := "Tor2_hmi".button.bPauza.set);
+	            
+	            //jeżeli nie leci dezynfekant to kasuj czas dozowania
+	            IF "Cip".obiekt["Cip".tor[0].zbiorniczekDozowanieDezynfekantu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0 THEN
+	                "Tor2_program".program.opóżnienie := "Tor2_program".program.opóżnienie - 0.1;
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[20];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            
+	        7283://dezynfekcja chemiczna
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7284,
+	                         inZadaneOpóżnienie := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[6].PM[6], //czas mycia
+	                         numerKroku := "Tor2_program".program.numerKroku,
+	                         opóźnienie := "Tor2_program".program.opóżnienie,
+	                         pauza := "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[6].PM[6];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            
+	        7284://oprożnianie zbiornika dezynfekcji
+	            
+	            IF "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	            THEN
+	                
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7287,
+	                             inZadaneOpóżnienie := 2,
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza := "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            "Tor2_program".program.zadana1 := 0;
+	            "Tor2_program".program.aktualna1 := BOOL_TO_INT("Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.czujnikDolnegoPoziomu].hmiPotwWysterowania);
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	            
+	            
+	            
+	            
+	        7287://Płukanie poo dezynfekcji   
+	            
+	            
+	            IF "Tor2_hmi".bPomińDesynfekcje = 1
+	            THEN
+	                "Tor2_program".program.numerKroku := 7290;
+	            END_IF;
+	            
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	            "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7289;
+	            END_IF;
+	            
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	        7289://Drenaż zbiornika
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[23] = 0
+	            THEN
+	                "Tor2_program".program.numerKroku := 7290;
+	            END_IF;
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7290,
+	                         inZadaneOpóżnienie := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku := "Tor2_program".program.numerKroku,
+	                         opóźnienie := "Tor2_program".program.opóżnienie,
+	                         pauza := "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	            
+	            
+	        7290://zatrzymanie przepływu
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru <5.0
+	            THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7291,
+	                             inZadaneOpóżnienie   := 10,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 :=5;
+	            "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	            
+	            
+	        7291:// odlicz opóźnienie
+	            
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7100,
+	                         inZadaneOpóżnienie   := 1,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            "Tor2_hmi".button.bStop.set := 1;
+	          
+	            
+	            
+	        "Tor2_program".program.zadana1 := 0;
+	        "Tor2_program".program.aktualna1 :=0;
+	        "Tor2_program".program.zadana2 := 10;
+	        "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	            
+	    7300: //Zaczytanie numeru receptury - krok mycia =2
+	        
+	        IF "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury = 0 THEN
+	            "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury := 1;
+	        END_IF;
+	        IF
+	            "Tor2_RecepturyStacjaMycia".klawiszUżyjTejReceptury = 1
+	            AND "Tor2_RecepturyStacjaMycia".numerWyswietlanejReceptury = 1
+	        THEN
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7301,
+	                         inZadaneOpóżnienie   := 0,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury := 0;
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 3;
+	            #doSkasowania := 1;
+	            
+	        END_IF;
+	        "Tor2_program".program.zadana1 := 0;
+	        "Tor2_program".program.aktualna1 := 0;
+	        "Tor2_program".program.zadana2 := 0;
+	        "Tor2_program".program.aktualna2 := 0;
+	            
+	    7301://kolejny krok mycia
+	      
+	        IF
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia < 5
+	        THEN
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7310,
+	                         inZadaneOpóżnienie   := 1,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	        END_IF;
+	        IF
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia >=5
+	        THEN
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7290,
+	                         inZadaneOpóżnienie   := 1,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            "Tor2_hmi".button.bCip.set := 0;
+	        END_IF;
+	        "Tor2_program".program.zadana1 := 0;
+	        "Tor2_program".program.aktualna1 := 0;
+	        "Tor2_program".program.zadana2 := 0;
+	        "Tor2_program".program.aktualna2 := 0;
+	        
+	        
+	    7310:// Uzupełnianie poziomu w zbiorniku
+	        
+	        IF
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia = 3
+	        THEN
+	            IF "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1 THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7320,
+	                             inZadaneOpóżnienie   := 1,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	        END_IF;
+	        IF
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia = 4
+	        THEN
+	            IF "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1 THEN
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7320,
+	                             inZadaneOpóżnienie   := 1,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	        END_IF;
+	            
+	        "Tor2_program".program.zadana1 :=1;
+	        "Tor2_program".program.aktualna1 :=BOOL_TO_INT("Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania);
+	        "Tor2_program".program.zadana2 := 1;
+	        "Tor2_program".program.aktualna2 := BOOL_TO_INT("Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania);
+	        
+	    7320://przygotowanie środkla chemicznego
+	        
+	        IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	            AND
+	            "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	        THEN
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7321,
+	                         inZadaneOpóżnienie   := 30,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	        END_IF;
+	        
+	        "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] +
+	        "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	        "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	        "Tor2_program".program.zadana2 :=  "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	        "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	        "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	        
+	        
+	        
+	    7321://wypłukiwanie środka chemicznego
+	        
+	        IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	        THEN
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7330,
+	                         inZadaneOpóżnienie   := 0,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	        END_IF;
+	        
+	        "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	        "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	        "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	        "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	        "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	        "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	        
+	        
+	    7330://koniec mycia
+	        
+	        "IdźDoKroku"(inNumerKrokuDocelowy := 7301,
+	                     inZadaneOpóżnienie   := 0,
+	                     numerKroku           := "Tor2_program".program.numerKroku,
+	                     opóźnienie           := "Tor2_program".program.opóżnienie,
+	                     pauza:=  "Tor2_hmi".button.bPauza.set);
+	        "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	        "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	        
+	        "Tor2_program".program.zadana1 := 0;
+	        "Tor2_program".program.aktualna1 := 0;
+	        "Tor2_program".program.zadana2 := 0;
+	        "Tor2_program".program.aktualna2 := 0;
+	        
+	    7400://   Zaczytanie numeru receptury (program ustawia Krok mycia = 1) tylko program numer 2
+	        
+	        IF "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury = 0 THEN
+	            "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury := 1;
+	        END_IF;
+	        IF
+	            "Tor2_RecepturyStacjaMycia".klawiszUżyjTejReceptury = 1
+	            AND "Tor2_RecepturyStacjaMycia".numerWyswietlanejReceptury = 2
+	        THEN
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7401,
+	                         inZadaneOpóżnienie   := 0,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            "Tor2_RecepturyStacjaMycia".bPokazOknoWyboruReceptury := 0;
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 1;
+	            #doSkasowania := 1;
+	            
+	            //Wyskakuje okno wyboru receptur mycia (można wybrać tylko program 2),
+	            //po wybraniu krok przechodzi
+	            //(program blokuje możliwość pracy na drugim torze - może mrygać na nim kontrolka CIP)
+	            //do zrobienia !!!!!
+	            
+	            
+	        END_IF;
+	        "Tor2_program".program.zadana1 := 0;
+	        "Tor2_program".program.aktualna1 := 0;
+	        "Tor2_program".program.zadana2 := 0;
+	        "Tor2_program".program.aktualna2 := 0;
+	        
+	        
+	    7401:// drenaż zbiornika wody wtórnej
+	        
+	        
+	        IF
+	            "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	        THEN
+	            "Tor2_program".program.opóżnienie := 0;
+	        END_IF;
+	        "IdźDoKroku"(inNumerKrokuDocelowy := 7402,
+	                     inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                     numerKroku           := "Tor2_program".program.numerKroku,
+	                     opóźnienie           := "Tor2_program".program.opóżnienie,
+	                     pauza:=  "Tor2_hmi".button.bPauza.set);
+	        
+	        "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	        "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	        "Tor2_program".program.zadana2 := 0;
+	        "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	        
+	    7402://płukanie zimne
+	            
+	        IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7403;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7403;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	        7403: //płukanie ciepłe
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7404;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                AND
+	                "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	                
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7404;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	        7404://drenaż zbiornika
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7405,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            IF "Tor2_program".program.opóżnienie
+	                >= "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7]
+	            THEN
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	        
+	        7405:// zaczytanie kroku
+	      
+	            
+	            
+	            IF "Tor2_RecepturyStacjaMycia".numerKrokuMycia>=5
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7420;
+	            ELSE
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7410,
+	                             inZadaneOpóżnienie   :=0,
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	            END_IF;
+	            
+	        7410://drenaż zbiornika
+	            
+	                
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	                THEN
+	                    ;
+	                    "Tor2_program".program.numerKroku := 7415;
+	               
+	                END_IF;
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7411,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	        7411: //Wypełnienie obiegu środkiem myjącym
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	            THEN
+	                "Tor2_program".program.numerKroku := 7412;
+	                
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := 0;
+	            
+	        7412://    Odliczanie czasu mycia
+	            
+	            
+	                
+	                IF
+	                    "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                    AND
+	                    "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	                THEN
+	                    ;
+	                ELSE
+	                    "Tor2_program".program.opóżnienie := "Tor2_program".program.opóżnienie -0.1;
+	                END_IF;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7413,
+	                             inZadaneOpóżnienie := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[6],
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                
+	                
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	                "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	                "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[6];
+	                "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	            
+	            
+	        7413: //Drenaż zbiornika
+	        
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7414,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	            
+	            
+	        7414://    Płukanie międzyfazowe
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                AND
+	                "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7415;
+	            END_IF;
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	            
+	        7415://koniec mycia
+	            
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7405,
+	                         inZadaneOpóżnienie   := 0,
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            
+	            "Tor2_program".program.zadana1 := 0;
+	            "Tor2_program".program.aktualna1 := 0;
+	            "Tor2_program".program.zadana2 := 10;
+	            "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	            
+	            
+	        7420:       //Płukanie główne
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7430;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7430;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=1;
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12]+
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	        7430://Drenaż zbiornika ługu (program ustawia K.M = 1)
+	            
+	            
+	            "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 1;
+	            
+	            IF
+	                "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	            THEN
+	                "Tor2_program".program.opóżnienie := 0;
+	            END_IF;
+	            "IdźDoKroku"(inNumerKrokuDocelowy := 7431,
+	                         inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                         numerKroku           := "Tor2_program".program.numerKroku,
+	                         opóźnienie           := "Tor2_program".program.opóżnienie,
+	                         pauza:=  "Tor2_hmi".button.bPauza.set);
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	            "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	            "Tor2_program".program.zadana2 := 0;
+	            "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	        7431://płukanie zimne
+	            
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7432;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7432;
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	            
+	        7432://płukanie ciepłe +km
+	            
+	                
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	                THEN
+	                    ;
+	                    "Tor2_program".program.numerKroku := 7433;
+	                    "Tor2_RecepturyStacjaMycia".numerKrokuMycia :=4;
+	                END_IF;
+	                
+	                
+	                ;
+	                IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                    AND
+	                    "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	                THEN
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	                ELSE
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                END_IF;
+	                
+	                IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	                THEN
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                    "Tor2_program".program.numerKroku := 7433;
+	                    "Tor2_RecepturyStacjaMycia".numerKrokuMycia := 4;
+	                END_IF;
+	                
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	                "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	                "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	                "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	                
+	                
+	            7433://wypelnienie obiegu srodkiem myjacym
+	                
+	                IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	                THEN
+	                    ;
+	                    "Tor2_program".program.numerKroku := 7436;
+	                END_IF;
+	                IF
+	                    "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	                THEN
+	                    "Tor2_program".program.opóżnienie := 0;
+	                END_IF;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7434,
+	                             inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	                "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	                "Tor2_program".program.zadana2 := 0;
+	                "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	            
+	            7434://wypełnienie obiegu srodkiem myjacym kwasnym
+	                
+	                ;
+	                IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	              
+	                THEN
+	                    "Tor2_program".program.numerKroku := 7435;
+	                END_IF;
+	            
+	            
+	            7435://Odliczanie czasu mycia
+	                
+	                
+	                IF
+	                    "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10] -
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                    AND
+	                    "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru >=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16]
+	                THEN
+	                    ;
+	                ELSE
+	                    "Tor2_program".program.opóżnienie := "Tor2_program".program.opóżnienie -0.1;
+	                END_IF;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7436,
+	                             inZadaneOpóżnienie := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[6],
+	                             numerKroku := "Tor2_program".program.numerKroku,
+	                             opóźnienie := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	               
+	                
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13] -
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[16];
+	                "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].temperaturaNaPowrocie].WartośćPomiaru;
+	                "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[6];
+	                "Tor2_program".program.aktualna2 := "Tor2_program".program.opóżnienie;
+	                
+	            7436://Drenaż zbiornika (+ K.M)
+	                IF
+	                    "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	                THEN
+	                    "Tor2_program".program.opóżnienie := 0;
+	                END_IF;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7439,
+	                             inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	                "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	                "Tor2_program".program.zadana2 := 0;
+	                "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	                
+	            7439:
+	                "Tor2_RecepturyStacjaMycia".numerKrokuMycia := "Tor2_RecepturyStacjaMycia".numerKrokuMycia + 1;
+	                "Tor2_program".program.numerKroku := 7440;
+	                
+	        7440://        Płukanie główne zbiornika ługu
+	            
+	            IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	            THEN
+	                ;
+	                "Tor2_program".program.numerKroku := 7450;
+	            END_IF;
+	            
+	            
+	            ;
+	            IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	            ELSE
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	            END_IF;
+	            
+	            IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	            THEN
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                "Tor2_program".program.numerKroku := 7450;
+	              
+	            END_IF;
+	            
+	            
+	            "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	            "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	            "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	            "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	            "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	            
+	            7450:// Drenaż zbiornika kwasu
+	                
+	                IF
+	                    "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	                THEN
+	                    "Tor2_program".program.opóżnienie := 0;
+	                END_IF;
+	                "IdźDoKroku"(inNumerKrokuDocelowy := 7460,
+	                             inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                             numerKroku           := "Tor2_program".program.numerKroku,
+	                             opóźnienie           := "Tor2_program".program.opóżnienie,
+	                             pauza:=  "Tor2_hmi".button.bPauza.set);
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	                "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	                "Tor2_program".program.zadana2 := 0;
+	                "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	                
+	            7460://     Płukanie główne zbiornika kwasu
+	                
+	                IF "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2] = 0
+	                THEN
+	                    ;
+	                    "Tor2_program".program.numerKroku := 7470;
+	                END_IF;
+	                
+	                
+	                ;
+	                IF "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <=
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12] +
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15]
+	                  
+	                THEN
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 1;
+	                ELSE
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                END_IF;
+	                
+	                IF "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 >
+	                    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5]
+	                THEN
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].zerujLicznik1 := 0;
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].startLicznik1 := 0;
+	                    "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1 := 0;
+	                    "Tor2_program".program.numerKroku := 7470;
+	                 
+	                 
+	                END_IF;
+	                
+	                
+	                "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[12]+
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[15];
+	                "Tor2_program".program.aktualna1 := "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru;
+	                "Tor2_program".program.zadana2 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[5];
+	                "Tor2_program".program.aktualna2 := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].licznik1;
+	                
+	                7470:// Drenaż zbiornika kwasu
+	                    
+	                    IF
+	                        "Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1
+	                    THEN
+	                        "Tor2_program".program.opóżnienie := 0;
+	                    END_IF;
+	                    "IdźDoKroku"(inNumerKrokuDocelowy := 7290,
+	                                 inZadaneOpóżnienie   := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7],
+	                                 numerKroku           := "Tor2_program".program.numerKroku,
+	                                 opóźnienie           := "Tor2_program".program.opóżnienie,
+	                                 pauza:=  "Tor2_hmi".button.bPauza.set);
+	                    
+	                    "Tor2_program".program.zadana1 := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[7];
+	                    "Tor2_program".program.aktualna1 := "Tor2_program".program.opóżnienie;
+	                    "Tor2_program".program.zadana2 := 0;
+	                    "Tor2_program".program.aktualna2 := INT_TO_REAL(BOOL_TO_INT("Cip".obiekt["Cip".tor[2].czujnikPrzepływuNaPowrocie].hmiPotwWysterowania = 1)) * 1.0;
+	           
+	                    
+	                7700://pauza
+	                    "krokZapauzowany" := "krokZapauzowany";
+	                        // IF "CIP1_hmi".button.bStart.set = 1 THEN
+	                        //     "CIP1_program".program.numerKroku :="krokZapauzowany";//tu stary numer kroku
+	                        // END_IF;
+	                        IF "Tor2_hmi".button.bPauza.set = 0 THEN
+	                            "Tor2_program".program.numerKroku := "krokZapauzowany";
+	                        END_IF;
+	                            ;
+	                       
+	                                
+	                    END_CASE;
+	                    //wejscie w pauze
+	                    //
+	            
+	                    
+	                            
+	                            IF "Tor2_program".program.numerKroku <> 7700 THEN
+	                                "krokZapauzowany" := "Tor2_program".program.numerKroku;
+	                            END_IF;
+	                            IF "Tor2_hmi".button.bPauza.set = 1 THEN
+	                                
+	                                "Tor2_program".program.numerKroku := 7700;
+	                            END_IF;
+END_FUNCTION
+

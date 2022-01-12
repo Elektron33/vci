@@ -1,0 +1,1274 @@
+﻿FUNCTION "Tor2.procedury_obiektów" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      obj : Int;
+      nr : Int;
+      Mnr : String;
+      aktualnyNumerReceptury : Int;
+      aktualnyKrokMycia : Int;
+      temp : Int;
+   END_VAR
+
+
+BEGIN
+	    //program zawiera procedury dla napedów i zaworów dla procedur o numerze >1  (procedura 0 i 1 jest obsługiwana w programie Obsługa obiektów)
+	    //procedury wyzwalane  z progrmu TablicaProcedór dla kolejnych kroków  "F1".obiekt["F100CP01"].procedura: = 2
+	    //wyzwolenie procedury zero  automatycznie  wyłącza naped/zawór
+	    //procedura:=1   uruchamia napęd/zawór na 100% - czyli załaczenie napedu jak kiedyś SET -- obsługiwana jest w programie Obsługa obiektów
+	    //PAUZA może być obsługiwana w każdej procedurze z osobna
+	    //
+	    //open ctrl+shift+(*)Numeric
+	    //close ctrl+shift+(/)Numeric
+	    
+	    #aktualnyNumerReceptury := "Tor2_RecepturyStacjaMycia".numerUżywanejReceptury;
+	    #aktualnyKrokMycia := "Tor2_RecepturyStacjaMycia".numerKrokuMycia;
+	    #temp := "Tor2_program".program.numerKroku;
+	    
+	    REGION POMPA PODAWANIA CIP
+	    
+	        #nr := "Cip".tor[2].pompaPodawaniaCip;
+	    CASE "Tor2_program".program.numerKroku OF
+	    7210, 7220, 7250:
+	    "Cip".obiekt[#nr].procedura := 2;
+	7244, 7270, 7281..7287, 7285, 7287,7310,7320, 7321, 7414, 7420:
+	    "Cip".obiekt[#nr].procedura := 3;
+	    7240, 7242, 7243, 7246:
+	    "Cip".obiekt[#nr].procedura := 6;
+	    7100:
+	    "Cip".obiekt[#nr].procedura := 7;
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    
+	    
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet := "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    OR "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	    "Cip".obiekt[#nr].SetReset.inReset := (NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND NOT "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania) OR
+	    ("Cip".obiekt["Cip".tor[1].zbiornikDezynfekantu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0 AND ("Tor1_program".program.numerKroku = 7282
+	    OR "Tor1_program".program.numerKroku = 7283));
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru;
+	    
+	    
+	    3: //wyzwolenie timerków
+	    
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet := "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    ;
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	    "Cip".obiekt[#nr].SetReset.inReset := NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    ;
+	    //załaczanie
+	    
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru;
+	    
+	    4: //wyzwolenie timerków
+	    
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 3
+	    ;
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 3
+	    ;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru;
+	    
+	    5: //wyzwolenie timerków
+	    
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet := "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 4
+	    ;
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	    "Cip".obiekt[#nr].SetReset.inReset := NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 4
+	    ;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru;
+	    
+	    6: //wyzwolenie timerków
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    ("Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 4)
+	    OR
+	    ("Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 3)
+	    ;
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    (NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 4)
+	    OR
+	    (NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND #aktualnyKrokMycia = 3);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := 1;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP := "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].przepływomierzZaWymiennikiem].WartośćPomiaru;
+	    
+	    
+	    7:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].inStartAuto; //cpNiex
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 1;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].inStartAuto; //cpNiex
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    
+	    
+	    0:
+	    ;
+	    
+	    // resetowanie całkującej części regulatora aby nie przejebać temperatury
+	    // "PID_Compact23".IntegralResetMode := 3;
+	    // "PID_Compact23".OverwriteInitialOutputValue := "F1.SP"."203"- 1.0;
+	    // "PID_Compact23".Reset := "F1".obiekt["F100LT01"].WartośćPomiaru > 70.0;
+	    // := LIMIT(IN := "APA".obiekt["PID123"].outWysterowanieUrządzenia,
+	    // MN := 0.0, MX := "APA".obiekt["H101TT01"].WartośćPomiaru + "H1.STP"."214");
+	    
+	    END_CASE;
+	    
+	    IF "Cip".obiekt[#nr].procedura > 0 THEN
+	    
+	    IF "Cip".obiekt[#nr].inStartAuto = 0 THEN
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 0.0;
+	    "Cip".obiekt[#nr].pid_SP := 0.0;
+	    END_IF;
+	    END_IF;
+	    
+	    
+	    "PID.pompaPodawaniaCipTor1"(Setpoint := "Cip".obiekt[#nr].pid_SP,
+	                        Input := "Cip".obiekt[#nr].pid_PV,
+	                        Reset := "Cip".obiekt[#nr].hmiResetAwaria,
+	                        Output => "Cip".obiekt[#nr].pid_Out);
+	    "PID.pompaPodawaniaCipTor1".Retain.CtrlParams.Gain := 1.2;
+	    "PID.pompaPodawaniaCipTor1".Retain.CtrlParams.Ti := 3;
+	    "PID.pompaPodawaniaCipTor1".Retain.CtrlParams.Td := 0.2;
+	    
+	    
+	    
+	    "PID.pompaPodawaniaCipTor1".IntegralResetMode := 3;
+	    "PID.pompaPodawaniaCipTor1".OverwriteInitialOutputValue := 1;
+	    "PID.pompaPodawaniaCipTor1".Reset := (
+	    "Cip".obiekt[#nr].procedura = 0 OR "Cip".obiekt[#nr].inStartAuto = 0
+	    OR "numer_kroku_stary_2" <> "Tor2_program".program.numerKroku);
+	    
+	    "numer_kroku_stary_2" := "Tor2_program".program.numerKroku;
+	    END_REGION
+	    
+	    REGION POMPA PRZYGOTOWANIA CIP(DRUGA PODAWCZA)
+	    
+	    //pompa powrotu/ Program musi ustalić, który tor myje stacje,
+	    //drugi staje się pompą powrotu (staje się pompą 102 - tymczasowo)
+	    //obsługa wykrywania w CIP1_wejściach_wyjściach
+	    #nr := "Cip".tor[2].pompaPodawaniaCip;
+	    CASE "Tor2_program".program.numerKroku OF
+	    7401..7404, 7410..7414:
+	    "Cip".obiekt[#nr].procedura := 2
+	    ;
+	    7230..7440:
+	    "Cip".obiekt[#nr].procedura := 3;
+	    7450, 7460:
+	    "Cip".obiekt[#nr].procedura := 4;
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 60;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    //załaczanie
+	    
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 60;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    //załaczanie
+	    
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    4:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 60;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    
+	    
+	    END_CASE;
+	    
+	    END_REGION
+	    
+	    REGION ZAWÓR DOZOWANIA ŁUGU W LINIE
+	    
+	        #nr := "Cip".tor[0].zawórDozowaniaLuguwLinię;
+	        
+	        CASE "Tor2_program".program.numerKroku OF
+	            7243, 7320:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //set - warunki dla wejścia funkcji Set
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 10;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1
+	    AND #aktualnyKrokMycia = 3;
+	    
+	    //reset - warunki dla wejścia funkcji Reset
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	    OR #aktualnyKrokMycia = 4;
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].Flipaj.czas_ON := 300;
+	    "Cip".obiekt[#nr].Flipaj.czas_OFF := 100;
+	    "Cip".obiekt[#nr].Flipaj.ile_petli := 999;
+	    "Cip".obiekt[#nr].Flipaj.in := "Cip".obiekt[#nr].SetReset.wyjście;
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].Flipaj.Q;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    3:
+	    //set - warunki dla wejścia funkcji Set
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 10;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1
+	    AND ("Tor2_RecepturyStacjaMycia".numerKrokuMycia = 3)
+	    AND ("Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[11]);
+	    
+	    //reset - warunki dla wejścia funkcji Reset
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	    OR ("Tor2_RecepturyStacjaMycia".numerKrokuMycia = 4)
+	    OR ("Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[11]);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].Flipaj.czas_ON := REAL_TO_INT(
+	                                                    "Tor2_RecepturyStacjaMycia".
+	                                                    Receptura[#aktualnyNumerReceptury].
+	                                                    Krok[#aktualnyKrokMycia].PM[26] * 10);
+	    "Cip".obiekt[#nr].Flipaj.czas_OFF := REAL_TO_INT(
+	                                                     "Tor2_RecepturyStacjaMycia".
+	                                                     Receptura[#aktualnyNumerReceptury].
+	                                                     Krok[#aktualnyKrokMycia].PM[27] * 10);
+	    "Cip".obiekt[#nr].Flipaj.ile_petli :=
+	    REAL_TO_INT("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[20] /
+	                ("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[26] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[27] + 1.0));
+	    "Cip".obiekt[#nr].Flipaj.in := "Cip".obiekt[#nr].SetReset.wyjście;
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].Flipaj.Q;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	0:
+	    "Cip".obiekt[#nr].Flipaj.in := 0;
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWÓR DOZOWANIA KWASU W LINIE
+	    
+	        #nr := "Cip".tor[0].zawórDozowaniaKwasuwLinię;
+	        
+	        CASE "Tor2_program".program.numerKroku OF
+	            7243, 7320:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //set - warunki dla wejścia funkcji Set
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 10;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1
+	    AND ("Tor2_RecepturyStacjaMycia".numerKrokuMycia = 4);
+	    
+	    //reset - warunki dla wejścia funkcji Reset
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	    OR ("Tor2_RecepturyStacjaMycia".numerKrokuMycia = 3);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].Flipaj.czas_ON := 300;
+	    "Cip".obiekt[#nr].Flipaj.czas_OFF := 100;
+	    "Cip".obiekt[#nr].Flipaj.ile_petli := 999;
+	    "Cip".obiekt[#nr].Flipaj.in := "Cip".obiekt[#nr].SetReset.wyjście;
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].Flipaj.Q;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    3:
+	    //set - warunki dla wejścia funkcji Set
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 100;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1
+	    AND ("Tor2_RecepturyStacjaMycia".numerKrokuMycia = 4) //warunki dla toru Cip1
+	    AND ("Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[11]);
+	    
+	    
+	    //reset - warunki dla wejścia funkcji Reset
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	    OR ("Tor2_RecepturyStacjaMycia".numerKrokuMycia = 3) //warunki dla toru Cip1
+	    OR ("Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[11]);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].Flipaj.czas_ON := REAL_TO_INT(
+	                                                    "Tor2_RecepturyStacjaMycia".
+	                                                    Receptura[#aktualnyNumerReceptury].
+	                                                    Krok[#aktualnyKrokMycia].PM[26] * 10);
+	    "Cip".obiekt[#nr].Flipaj.czas_OFF := REAL_TO_INT(
+	                                                     "Tor2_RecepturyStacjaMycia".
+	                                                     Receptura[#aktualnyNumerReceptury].
+	                                                     Krok[#aktualnyKrokMycia].PM[27] * 10);
+	    "Cip".obiekt[#nr].Flipaj.ile_petli :=
+	    REAL_TO_INT("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[20] /
+	                ("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[26] +
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[27] + 1.0));
+	    "Cip".obiekt[#nr].Flipaj.in := "Cip".obiekt[#nr].SetReset.wyjście;
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].Flipaj.Q;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	0:
+	    "Cip".obiekt[#nr].Flipaj.in := 0;
+	 
+	    END_CASE;
+	    
+	    END_REGION
+	    
+	    REGION POMPKA DOZOWANIA DEZYNFEKANTU W LINIE
+	    
+	        #nr := "Cip".tor[2].pompkaDozowaniaDezynfekantuwLinię;
+	        
+	        CASE "Tor2_program".program.numerKroku OF
+	            7281:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    
+	    //
+	    //załaczanie
+	    "Cip".obiekt[#nr].Flipaj.czas_ON := REAL_TO_INT(
+	                                                  "Tor2_RecepturyStacjaMycia".
+	                                                  Receptura[#aktualnyNumerReceptury].
+	                                                  Krok[#aktualnyKrokMycia].PM[26] * 10);
+	    "Cip".obiekt[#nr].Flipaj.czas_OFF := REAL_TO_INT(
+	                                                   "Tor2_RecepturyStacjaMycia".
+	                                                   Receptura[#aktualnyNumerReceptury].
+	                                                   Krok[#aktualnyKrokMycia].PM[27] * 10);
+	  "Cip".obiekt[#nr].Flipaj.ile_petli := 999;
+	    // REAL_TO_INT("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[20] /
+	    //             ("Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[26] +
+	    //             "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[27] + 1.0));
+	    
+	    ;
+	    "Cip".obiekt[#nr].Flipaj.in := 1;
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].Flipaj.Q;
+	
+	    0:
+	    "Cip".obiekt[#nr].Flipaj.in := 0;
+	    END_CASE;
+	END_REGION
+	REGION zawor  DOZOWANIA DEZYNFEKANTU W LINIE
+	    
+	    #nr := "Cip".tor[2].zawórDozowaniaDezynfekantuwLinię;
+	    
+	    CASE "Tor2_program".program.numerKroku OF
+	        7281:
+	            "Cip".obiekt[#nr].procedura := 2;
+	        ELSE
+	            "Cip".obiekt[#nr].procedura := 0;
+	    END_CASE;
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	        2:
+	            
+	            //
+	            //załaczanie
+	      
+	            
+	            ;
+	           
+	            "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt["Cip".tor[2].pompkaDozowaniaDezynfekantuwLinię].outStartUrządzenie;
+	      
+	        0:
+	            "Cip".obiekt[#nr].Flipaj.in := 0;
+	    END_CASE;
+	END_REGION
+	    
+	    REGION ZAWOR ZRZUTOWY DO KANALIZACJI
+	    
+	    
+	        #nr := "Cip".tor[2].zawórZrzutowyDoKanalizacji;
+	    CASE "Tor2_program".program.numerKroku OF
+	    7100, 7202..7246, 7270,7287,7310, 7320, 7321, 7402, 7403, 7411..7414, 7420, 7431..7435, 7440, 7460:
+	    "Cip".obiekt[#nr].procedura := 2;
+	   
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[2].zawórPowrotnyWodyWtórnej].outStartUrządzenie
+	    OR "Cip".obiekt["Cip".tor[2].zawórPowrotnyŁugu].outStartUrządzenie
+	    OR "Cip".obiekt["Cip".tor[2].zawórPowrotnyKwasu].outStartUrządzenie;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[2].zawórPowrotnyWodyWtórnej].outStartUrządzenie
+	    AND NOT "Cip".obiekt["Cip".tor[2].zawórPowrotnyŁugu].outStartUrządzenie
+	    AND NOT "Cip".obiekt["Cip".tor[2].zawórPowrotnyKwasu].outStartUrządzenie;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[2].zawórBypassPrzygotowaniaStacji].outStartUrządzenie;
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[2].zawórBypassPrzygotowaniaStacji].outStartUrządzenie;
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWOR WYDAWCZY CIP
+	    
+	        #nr := "Cip".tor[2].zawórWydawczyCip;
+	    CASE "Tor2_program".program.numerKroku OF
+	    7210..7290:
+	    "Cip".obiekt[#nr].procedura := 1;
+	    
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].outStartUrządzenie;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].outStartUrządzenie;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWOR BYPASS PRZYGOTOWANIA STACJI
+	    
+	        #nr := "Cip".tor[2].zawórBypassPrzygotowaniaStacji;
+	    CASE "Tor2_program".program.numerKroku OF
+	    7210..7290:
+	    "Cip".obiekt[#nr].procedura := 2;
+	    7320:
+	    "Cip".obiekt[#nr].procedura := 3;
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	    "Cip".obiekt[#nr].SetReset.inSet :=NOT 
+	    "Cip".obiekt["Cip".tor[2].zawórWydawczyCip].outStartUrządzenie;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[2].zawórWydawczyCip].outStartUrządzenie;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    3:
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := 1;
+	    
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWOR WYDAWCZY WODY WTORNEJ
+	    
+	        #nr := "Cip".tor[2].zawórWydawczyWodyWtórnej;
+	    
+	    CASE "Tor2_program".program.numerKroku OF
+	    7210,7230:
+	    "Cip".obiekt[#nr].procedura := 2;
+	    7100:
+	    "Cip".obiekt[#nr].procedura := 3;
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    
+	    
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND (#aktualnyKrokMycia = 1 OR #aktualnyKrokMycia = 2);
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 10;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    OR (#aktualnyKrokMycia <> 1 AND #aktualnyKrokMycia <> 2);
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    ("Tor2_program".program.numerKroku >= 7401 AND
+	    "Tor2_program".program.numerKroku <= 7420);
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 60;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT ("Tor2_program".program.numerKroku >= 7401 AND
+	    "Tor2_program".program.numerKroku <= 7420);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWÓR POWROTNY WODY WTORNEJ
+	    
+	        #nr := "Cip".tor[2].zawórPowrotnyWodyWtórnej;
+	    CASE "Tor2_program".program.numerKroku OF
+	        7250, 7270, 7285, 7287:
+	            "Cip".obiekt[#nr].procedura := 2;
+	        7402, 7403, 7411, 7414, 7420:
+	            "Cip".obiekt[#nr].procedura := 1;
+	        ELSE
+	            "Cip".obiekt[#nr].procedura := 0;
+	            
+	    END_CASE;
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikGórnegoPoziomu].hmiPotwWysterowania
+	    // AND (#aktualnyKrokMycia = 5 OR #aktualnyKrokMycia = 6); // nie wiem czy to było dobrze w Orle 1
+	    ;
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 1;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikGórnegoPoziomu].hmiPotwWysterowania
+	    // OR (#aktualnyKrokMycia <> 5 AND #aktualnyKrokMycia <> 6);
+	     ;
+	    // ;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWOR WYDAWCZY ŁUGU
+	    
+	        #nr := "Cip".tor[2].zawórWydawczyŁugu;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7240..7243,7411,7412:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            7100:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            7320:
+	                "Cip".obiekt[#nr].procedura := 4;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND (#aktualnyKrokMycia = 3);
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 10;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    OR (#aktualnyKrokMycia <> 3);
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    ("Tor2_program".program.numerKroku >= 7430 AND
+	    "Tor2_program".program.numerKroku <= 7440);
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT ("Tor2_program".program.numerKroku >= 7430 AND
+	    "Tor2_program".program.numerKroku <= 7440);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    4:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania
+	    AND (#aktualnyKrokMycia = 3);
+	    
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania
+	    OR (#aktualnyKrokMycia <> 3);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWÓR POWROTNY ŁUGU
+	    
+	        #nr := "Cip".tor[2].zawórPowrotnyŁugu;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7431,7432,7434,7435,7440:
+	                "Cip".obiekt[#nr].procedura := 1;
+	            7242, 7245, 7246, 7321:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            7100:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            7243, 7244, 7310, 7320:
+	                "Cip".obiekt[#nr].procedura := 4;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10]
+	    AND (#aktualnyKrokMycia = 3)
+	    AND NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 1;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10]
+	    OR (#aktualnyKrokMycia <> 3)
+	    OR "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[2].zawórWydawczyŁugu].inStartAuto
+	    AND ("Tor2_program".program.numerKroku > 7400
+	    AND "Tor2_program".program.numerKroku < 7470);
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[2].zawórWydawczyŁugu].inStartAuto
+	    OR ("Tor2_program".program.numerKroku < 7400
+	    OR "Tor2_program".program.numerKroku > 7470);
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    4:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    (#aktualnyKrokMycia = 3);
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 10;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    (#aktualnyKrokMycia <> 3);
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    END_CASE;
+	    
+	    END_REGION
+	    
+	    REGION ZAWÓR WYDAWCZY KWASU
+	        
+	        #nr := "Cip".tor[2].zawórWydawczyKwasu;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7240..7243, 7411, 7412, 7434, 7435:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            7100:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            7320:
+	                "Cip".obiekt[#nr].procedura := 4;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	                AND (#aktualnyKrokMycia = 4);
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 10;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	                OR (#aktualnyKrokMycia <> 4);
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	            3:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                ("Tor2_program".program.numerKroku >= 7450 AND
+	                "Tor2_program".program.numerKroku <= 7470);
+	                
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                NOT ("Tor2_program".program.numerKroku >= 7450 AND
+	                "Tor2_program".program.numerKroku <= 7470);
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	                
+	                
+	            4:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania
+	                AND (#aktualnyKrokMycia = 4);
+	                
+	                
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania
+	                OR (#aktualnyKrokMycia <> 4);
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWÓR POWROTNY KWASU
+	        
+	        #nr := "Cip".tor[2].zawórPowrotnyKwasu;
+	        
+	        CASE "Tor2_program".program.numerKroku OF
+	            7460:
+	                "Cip".obiekt[#nr].procedura := 1;
+	            7242, 7245, 7246, 7321:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            7100:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            7243, 7244, 7310, 7320:
+	                "Cip".obiekt[#nr].procedura := 4;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru >=
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10]
+	                AND (#aktualnyKrokMycia = 4)
+	                AND NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 1;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                "Cip".obiekt["Cip".tor[2].przewodnośćNaPowrocie].WartośćPomiaru <
+	                "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10]
+	                OR (#aktualnyKrokMycia <> 4)
+	                OR "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	            3:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[2].zawórWydawczyKwasu].inStartAuto AND
+	                ("Tor2_program".program.numerKroku >= 7400 AND
+	                "Tor2_program".program.numerKroku <= 7470);
+	                ;
+	                
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                NOT "Cip".obiekt["Cip".tor[2].zawórWydawczyKwasu].inStartAuto
+	                OR ("Tor2_program".program.numerKroku < 7400 OR
+	                "Tor2_program".program.numerKroku > 7470);
+	                ;
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	            4:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	                "Cip".obiekt[#nr].SetReset.inSet := (#aktualnyKrokMycia = 4);
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 10;
+	                "Cip".obiekt[#nr].SetReset.inReset := (#aktualnyKrokMycia <> 4);
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWÓR WYDAWCZY WODY CZYSTEJ
+	    
+	        #nr := "Cip".tor[2].zawórWydawczyWodyCzystej;
+	        
+	        CASE "Tor2_program".program.numerKroku OF
+	            7220..7230, 7411, 7412:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            7244..7270, 7321, 7402, 7403, 7414, 7420, 7431, 7432, 7440, 7460:
+	                "Cip".obiekt[#nr].procedura := 3;
+	            7242, 7243:
+	                "Cip".obiekt[#nr].procedura := 4;
+	            7310, 7320:
+	                "Cip".obiekt[#nr].procedura := 5;
+	            7281..7291:
+	                "Cip".obiekt[#nr].procedura := 6;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    AND NOT "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 10;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania
+	    OR "Cip".obiekt["Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 3;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 3;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    4:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    (NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 3)
+	    OR (NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 4);
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    ("Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 3)
+	    OR ("Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 4);
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    5:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    (NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 3)
+	    OR (NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 4);
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    ("Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 3)
+	    OR ("Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania AND #aktualnyKrokMycia = 4);
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	6:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet :=1;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    NOT ("Cip".obiekt["Cip".tor[2].zawórWydawczyDezynfekantu].hmiPotwWysterowania);
+	    
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    ("Cip".obiekt["Cip".tor[2].zawórWydawczyDezynfekantu].hmiPotwWysterowania);;
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION zawór wydawczy dezynfekantu
+	        
+	        #nr := "Cip".tor[2].zawórWydawczyDezynfekantu;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7282..7284:
+	                "Cip".obiekt[#nr].procedura := 2;
+	                
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.poziomAnalogowy].WartośćPomiaru > 10.0;
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.poziomAnalogowy].WartośćPomiaru < 0.01;
+	                ;
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION zawór powrotny dezynfekantu
+	        
+	        #nr := "Cip".tor[2].zawórPowrotnyDezynfekantu;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7281..7283:
+	                "Cip".obiekt[#nr].procedura :=2;
+	                
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 5;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                NOT  "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.czujnikGórnegoPoziomu].hmiPotwWysterowania ;
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                "Cip".obiekt["Cip".tor[2].zbiornikDezynfekantu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	                ;
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION zawór stopowy dezynfekantu
+	        
+	        #nr := "Cip".tor[2].zawórStopowyPowrotuDezynfekantu;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7281..7283:
+	                "Cip".obiekt[#nr].procedura := 2;
+	                
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 0;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[2].zawórPowrotnyDezynfekantu].hmiPotwWysterowania;
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                NOT "Cip".obiekt["Cip".tor[2].zawórPowrotnyDezynfekantu].hmiPotwWysterowania;
+	                ;
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWÓR PAROWY REGULACYJNY
+	    
+	        #nr := "Cip".tor[2].zawórParowyRegulacyjny;
+	        
+	    CASE "Tor2_program".program.numerKroku OF
+	    7220, 7250, 7403, 7414, 7432:
+	    "Cip".obiekt[#nr].procedura := 2;
+	    7242..7246, 7320, 7321, 7411, 7412, 7434, 7435:
+	    "Cip".obiekt[#nr].procedura := 3;
+	    
+	    ELSE
+	    "Cip".obiekt[#nr].procedura := 0;
+	    
+	    END_CASE;
+	    
+	    
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	    "Cip".obiekt[#nr].SetReset.inSet := "Cip".obiekt["Cip".tor[2].zawórParowyOdcinający].outStartUrządzenie;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset := NOT "Cip".obiekt["Cip".tor[2].zawórParowyOdcinający].outStartUrządzenie;
+	    
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP :=
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[14];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].temperaturaZaWymiennikiem].WartośćPomiaru;
+	    3:
+	    //wyzwolenie timerków
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	    "Cip".obiekt[#nr].SetReset.inSet := "Cip".obiekt["Cip".tor[2].zawórParowyOdcinający].outStartUrządzenie;
+	    
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	    "Cip".obiekt[#nr].SetReset.inReset := NOT "Cip".obiekt["Cip".tor[2].zawórParowyOdcinający].outStartUrządzenie;
+	    
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto :=  //pid_out wypełniamy w wywołaniu pida z out pida
+	    LIMIT(IN := "Cip".obiekt[#nr].pid_Out, MN := 0.0, MX := 100.0);//pid_out ;
+	    
+	    ////PID
+	    "Cip".obiekt[#nr].pid_SP :=
+	    "Tor2_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[13];
+	    "Cip".obiekt[#nr].pid_PV := "Cip".obiekt["Cip".tor[2].temperaturaZaWymiennikiem].WartośćPomiaru;
+	    
+	    0:
+	    ;
+	    
+	    // resetowanie całkującej części regulatora aby nie przejebać temperatury
+	    // "PID_Compact23".IntegralResetMode := 3;
+	    // "PID_Compact23".OverwriteInitialOutputValue := "F1.SP"."203"- 1.0;
+	    // "PID_Compact23".Reset := "F1".obiekt["F100LT01"].WartośćPomiaru > 70.0;
+	    // := LIMIT(IN := "APA".obiekt["PID123"].outWysterowanieUrządzenia,
+	    // MN := 0.0, MX := "APA".obiekt["H101TT01"].WartośćPomiaru + "H1.STP"."214");
+	    
+	    END_CASE;
+	    
+	    IF "Cip".obiekt[#nr].procedura > 0 THEN
+	    
+	    IF "Cip".obiekt[#nr].inStartAuto = 0 THEN
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 0.0;
+	    "Cip".obiekt[#nr].pid_SP := 0.0;
+	    END_IF;
+	    END_IF;
+	    
+	    
+	    "PID.zawórRegulacyjnyParyTor1"(Setpoint := "Cip".obiekt[#nr].pid_SP,
+	                           Input := "Cip".obiekt[#nr].pid_PV,
+	                           Reset := "Cip".obiekt[#nr].hmiResetAwaria,
+	                           Output => "Cip".obiekt[#nr].pid_Out);
+	    "PID.zawórRegulacyjnyParyTor1".Retain.CtrlParams.Gain := 1.0;
+	    "PID.zawórRegulacyjnyParyTor1".Retain.CtrlParams.Ti := "Cip".obiekt[#nr].pid_I;
+	    "PID.zawórRegulacyjnyParyTor1".Retain.CtrlParams.Td := "Cip".obiekt[#nr].pid_D;
+	END_REGION
+	
+	    REGION ZAWOR PAROWY ODCINAJACY
+	        
+	        #nr := "Cip".tor[2].zawórParowyOdcinający;
+	        CASE "Tor2_program".program.numerKroku OF
+	            7220, 7240, 7242,7243, 7246, 7250, 7320, 7321, 7403, 7411, 7412, 7414, 7432, 7434, 7435:
+	                "Cip".obiekt[#nr].procedura := 2;
+	                
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 2;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].hmiPotwWysterowania
+	                AND "Cip".obiekt["Cip".tor[2].temperaturaZaWymiennikiem].WartośćPomiaru < 90;
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 2;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                NOT "Cip".obiekt["Cip".tor[2].pompaPodawaniaCip].hmiPotwWysterowania
+	                OR "Cip".obiekt["Cip".tor[2].temperaturaZaWymiennikiem].WartośćPomiaru >= 95;
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	        END_CASE;
+	    END_REGION
+	            
+END_FUNCTION
+

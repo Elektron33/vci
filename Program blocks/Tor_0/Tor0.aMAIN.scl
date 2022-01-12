@@ -1,0 +1,125 @@
+﻿FUNCTION "Tor0.aMAIN" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	"Tor0.procedury_obiektów"();
+	
+	
+	
+	
+	
+	
+	
+	// //milisimensy na procenty Tor1
+	// "ms_na_procenty"(inWartośćMierzona        := "CIP1_obiekty".obiekt["C101CT11"].WartośćPomiaru,
+	//                  inJednostkaAlkaliczna    := "ms_na_procenty_DB".inJednostkaAlkaliczna,
+	//                  inJednostkaKwaśna        := "ms_na_procenty_DB".inJednostkaKwaśna,
+	//                  inPrzewodnośćCzystejWody := "ms_na_procenty_DB".inPrzewodnośćCzystejWody,
+	//                  inWartośćOdcięcia        := 0.3,
+	//                  inJestMycieKwaśne        := ("CIP1_RecepturyStacjaMycia".numerKrokuMycia = 4),
+	//                  inJestMycieAlkaliczne    := ("CIP1_RecepturyStacjaMycia".numerKrokuMycia = 3),
+	//                  outStężenieŚrodka        => "ms_na_procenty_DB".outStężenieŚrodkaTor1);
+	
+	// //milisimensy na procenty Tor2
+	// "ms_na_procenty"(inWartośćMierzona        := "CIP2_obiekty".obiekt["C101CT21"].WartośćPomiaru,
+	//                  inJednostkaAlkaliczna    := "ms_na_procenty_DB".inJednostkaAlkaliczna,
+	//                  inJednostkaKwaśna        := "ms_na_procenty_DB".inJednostkaKwaśna,
+	//                  inPrzewodnośćCzystejWody := "ms_na_procenty_DB".inPrzewodnośćCzystejWody,
+	//                  inWartośćOdcięcia        := 0.3,
+	//                  inJestMycieKwaśne        := ("CIP2_RecepturyStacjaMycia".numerKrokuMycia = 4),
+	//                  inJestMycieAlkaliczne    := ("CIP2_RecepturyStacjaMycia".numerKrokuMycia = 3),
+	//                  outStężenieŚrodka        => "ms_na_procenty_DB".outStężenieŚrodkaTor2);
+	
+	
+	// "CIP1_obiekty".obiekt[20].pid_PV := "ms_na_procenty_DB".outStężenieŚrodkaTor1;
+	
+	// "CIP2_obiekty".obiekt[20].pid_PV := "ms_na_procenty_DB".outStężenieŚrodkaTor2;
+	
+	
+	
+	// //lampka zielona
+	// IF "CIP1_program".program.numerKroku > 7100 OR
+	//     "CIP2_program".program.numerKroku > 7100 THEN
+	//     "doLmpkaZielona" := 1;
+	// ELSE
+	//     "doLmpkaZielona" := 0;
+	// END_IF;
+	// IF "CIP1_hmi".button.bPauza.set THEN
+	//     "doLmpkaZielona" := "Clock_2Hz";
+	// END_IF;
+	
+	// REGION lampki
+	//     //lampka czerwona
+	//     IF "diKSB_1" = 0 OR "diKSB_2" = 0 OR "awaria" OR "awaria2" THEN
+	//         "doLampkaCzerwona" := "Clock_5Hz";
+	//     END_IF;
+	    
+	//     "suma" := 0;
+	//     FOR "x" := 2 TO 14 DO
+	//         IF "CIP1_alarmy".alarm["x"].stan > 0 THEN
+	//             "suma" := "suma" + 1;
+	//         END_IF;
+	//     END_FOR;
+	    
+	    
+	//     IF "suma" > 0 THEN
+	//         "awaria" := 1;
+	//     ELSE
+	//         "awaria" := 0;
+	//     END_IF;
+	    
+	    
+	//     "suma2" := 0;
+	//     FOR "x2" := 2 TO 14 DO
+	//         IF "CIP2_alarmy".alarm["x2"].stan > 0 THEN
+	//             "suma2" := "suma2" + 1;
+	//         END_IF;
+	//     END_FOR;
+	    
+	    
+	//     IF "suma2" > 0 THEN
+	//         "awaria2" := 1;
+	//     ELSE
+	//         "awaria2" := 0;
+	//     END_IF;
+	    
+	// END_REGION
+	// "rec_circuit_aq" := 445 * ("CIP1_RecepturyStacjaMycia".numerKrokuMycia);
+	// "rec_program_aq"  := 445 * ("CIP1_RecepturyStacjaMycia".numerUżywanejReceptury);
+	// IF
+	//     "CIP1_program".program.numerKroku = 7200 THEN
+	//     "rec_circuit" := 1;
+	//     "rec_program" := 1;
+	// END_IF;
+	// IF
+	//     "CIP1_program".program.numerKroku > 7200 THEN
+	//     "rec_cipRun" := 1;
+	//     "rec_circuit" := 1;
+	//     "rec_program" := 1;
+	// END_IF;
+	
+	// "rec2_circuit_aq" := 445 * ("CIP2_RecepturyStacjaMycia".numerKrokuMycia);;
+	// "rec_program_aq(1)":=445*"CIP2_RecepturyStacjaMycia".numerUżywanejReceptury;
+	
+	// IF
+	//     "CIP2_program".program.numerKroku = 7200 THEN
+	//     "rec_circuit2" := 1;
+	//     "rec_program2" := 1;
+	// END_IF;
+	// IF
+	//     "CIP2_program".program.numerKroku > 7200 THEN
+	//     "rec_cipRun2" := 1;
+	//     "rec_circuit2" := 1;
+	//     "rec_program2" := 1;
+	// END_IF;
+	// // "rec_program_aq" := 2000;
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

@@ -1,0 +1,1259 @@
+﻿FUNCTION "Cip.wejwyj" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      nr : Int;
+      pomiar : Real;
+      "bool" : Bool;
+      "real" : Real;
+      prąd : Real;
+      częstotliwość : Real;
+      diZasilanieOK : Bool;
+      diKSB_OK : Bool;
+      REALWEJSCIE : Real;
+      aktualnyNumerReceptury : Int;
+      aktualnyKrokMycia : Int;
+   END_VAR
+
+
+BEGIN
+	// ;//tu przypisujemy nazwą obiektów ich numery  (np. "F101CP01" := 1;  -  zmienną F101CP01 typu integer deklaryjemy na początku programowania jako zmienną globalną
+	// //w ten sposób okreslimy ilość obiektów i ich typy
+	// //podpinamy wejscia wyjscia DO obiektów
+	// // 
+	
+	#diKSB_OK := "diSAFETY";//kontrola przekażnika bezpieczeństwa
+	#diZasilanieOK := "di24.1" AND "di24.2"; //napiecie z zasilaczy 24VDC
+	#diKSB_OK := 1;
+	#diZasilanieOK := 1;
+	// /////////////////pompy na falowniku/regulowane
+	// //
+	#nr := 32;//tu wpisz nuemr obiektu
+	"Cip".tor[1].pompaPodawaniaCip:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C201CP01';
+	"Cip".obiekt[#nr].typObiektu := 4;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].hmiZasilanieOK := "diSAFETY";
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC202FC01";
+	"doC202FC01" := "Cip".obiekt[#nr].outStartUrządzenie;
+	"aoC202FC01" := REAL_TO_INT("Cip".obiekt[#nr].outWysterowanieUrządzenia * 276.648);
+	
+	#nr := 31;//tu wpisz nuemr obiektu
+	"C202FC01" := #nr;
+	"Cip".tor[2].pompaPodawaniaCip := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202CP01';
+	"Cip".obiekt[#nr].typObiektu := 4;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].hmiZasilanieOK := "diSAFETY";
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC201FC01";
+	"doC201FC01" := "Cip".obiekt[#nr].outStartUrządzenie;
+	"aoC201FC01" := REAL_TO_INT("Cip".obiekt[#nr].outWysterowanieUrządzenia * 276.648);
+	
+	
+	#nr := 97;//tu wpisz nuemr obiektu
+	"C2D1MP81" := #nr;
+	"Cip".tor[1].pompkaDozowaniaDezynfekantuwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1MP81';
+	"Cip".obiekt[#nr].typObiektu := 4;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].hmiZasilanieOK := #diZasilanieOK;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1FV81";
+	"doC2D1MP81" := "Cip".obiekt[#nr].outStartUrządzenie;
+	"aoC2D1MP81" := REAL_TO_INT("Cip".obiekt[#nr].outWysterowanieUrządzenia * 276.648);
+	
+	#nr := 98;//tu wpisz nuemr obiektu
+	"C2D2MP81" := #nr;
+	"Cip".tor[2].pompkaDozowaniaDezynfekantuwLinię:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1MP81';
+	"Cip".obiekt[#nr].typObiektu := 4;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].hmiZasilanieOK := #diZasilanieOK;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2FV81";
+	"doC2D2MP81" := "Cip".obiekt[#nr].outStartUrządzenie;
+	"aoC2D2MP81" := REAL_TO_INT("Cip".obiekt[#nr].outWysterowanieUrządzenia * 276.648);
+	
+	
+	
+	//////////////////pompy on/off
+	//
+	#nr :=99;//tu wpisz nuemr obiektu
+	"Cip".tor[0].pompkaDozowaniaKwasuwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1MP41';
+	"Cip".obiekt[#nr].typObiektu := 3;
+	"Cip".obiekt[#nr].hmiZasilanieOK := #diKSB_OK;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK; ;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania :=0;
+	"doC2A1MP41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	
+	// IF "Cip".obiekt["C2A1MP01"].hmiTrybAutoManual = 0 THEN
+	//     "Cip".obiekt["C2A1MP01"].inStartAuto :=
+	//     "Cip".obiekt["C2A1MP01"].inStartAuto
+	//     OR "C22_obiekty".obiekt["C2A1MP01"].inStartAuto;
+	//     "doC1A1MP01" := "Cip".obiekt["C2A1MP01"].inStartAuto;
+	// END_IF;
+	
+	
+	
+	//
+	#nr := 100;//tu wpisz nuemr obiektu
+	"C2L1MP41" := #nr; ;//tu wpisz nazwę
+	"Cip".tor[0].pompkaDozowaniaŁuguwLinię:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1MP41';
+	"Cip".obiekt[#nr].typObiektu := 3;
+	"Cip".obiekt[#nr].hmiZasilanieOK := #diKSB_OK;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK; ;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC2L1MP41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	
+	
+	// IF "Cip".obiekt["C2L1MP01"].hmiTrybAutoManual = 0 THEN
+	//     "Cip".obiekt["C2L1MP01"].inStartAuto :=
+	//     "Cip".obiekt["C2L1MP01"].inStartAuto
+	//     OR "C22_obiekty".obiekt["C2L1MP01"].inStartAuto;
+	//     "Cip".obiekt["C2L1MP01"].outStartUrządzenie := "Cip".obiekt["C2L1MP01"].inStartAuto;
+	//     "doC1L1MP01" := "Cip".obiekt["C2L1MP01"].inStartAuto;
+	// END_IF;
+	
+	
+	
+	// ///////////////////////////czujniki binarne ONOFF
+	// //
+	#nr := 42;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := NOT "diC2A1LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;
+	// //
+	 #nr := 105;//tu wpisz nuemr obiektu
+	 "Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	 "Cip".obiekt[#nr].nazwaObiektu := 'C2A1LL01';
+	 "Cip".obiekt[#nr].typObiektu := 9;
+	 "Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	 "Cip".obiekt[#nr].diPotwWysterowania :=  "diC2A1LL01";
+	 #bool := "Cip".obiekt[#nr].hmiPotwWysterowania;
+	//
+	#nr := 43;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1LL41';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=  "diC2A1LL41";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;
+	// //
+	// 
+	
+	
+	#nr := 44;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikKwasu.czujnikwłazu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 50;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu.czujnikGórnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=NOT "diC2D1LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 51;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu.czujnikDolnegoPoziomu  := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1LL01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1LL01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 52;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiorniczekDozowanieDezynfekantu.czujnikDolnegoPoziomu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1LL81';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1LL81";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr :=53;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu.czujnikwłazu  := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 59;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zbiornikDezynfekantu.czujnikGórnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=NOT "diC2D2LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	
+	#nr := 60;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zbiornikDezynfekantu.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2LL01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2LL01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 61;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zbiorniczekDozowanieDezynfekantu.czujnikDolnegoPoziomu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2LL81';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2LL81";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;
+	
+	#nr := 62;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zbiornikDezynfekantu.czujnikwłazu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 69;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu_2.czujnikGórnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=NOT "diC2D3LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 70;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu_2.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3LL01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1LL01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 71;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu_2.czujnikwłazu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 79;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=NOT "diC2L1LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 80;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1Ll01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3LL01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 81;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1Ll41';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1LL41";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 82;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikŁugu.czujnikwłazu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 88;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikWodyWtórnej.czujnikGórnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=NOT "diC2R1LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 89;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikWodyWtórnej.czujnikDolnegoPoziomu  := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1LL01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1LL01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 90;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikWodyWtórnej.czujnikwłazu  := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 94;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikwodyCzystej.czujnikGórnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1LH01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania :=NOT "diC2W1LH01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 95;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1LL01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2W1LL01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 96;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikwodyCzystej.czujnikwłazu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1PD01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2W1PD01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 101;//tu wpisz nuemr obiektu
+	"Cip".tor[1].czujnikPrzepływuNaPowrocie:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C211FV01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC211FV01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 102;//tu wpisz nuemr obiektu
+	"Cip".tor[2].czujnikPrzepływuNaPowrocie:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C212FV01';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC212FV01";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	#nr := 103;//tu wpisz nuemr obiektu
+	"Cip".tor[1].czujnikPrzepływuDozowanegoDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1FV81';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1FV81";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	#nr := 104;//tu wpisz nuemr obiektu
+	"Cip".tor[2].czujnikPrzepływuDozowanegoDezynfekantu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2FV81';
+	"Cip".obiekt[#nr].typObiektu := 9;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2FV81";
+	#bool := "Cip".obiekt[#nr].hmiPotwWysterowania;// //
+	
+	
+	
+	// // ///////////////////////zawory ONOFF i mix proof
+	// // //
+	// // //
+	 #nr:=23 ;//tu wpisz nuemr obiektu
+	 "Cip".tor[1].zawórBypassPrzygotowaniaStacji := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	 "Cip".obiekt[#nr].nazwaObiektu := 'C201AV01';
+	 "Cip".obiekt[#nr].typObiektu := 1;
+	 "Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	 "Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	 "Cip".obiekt[#nr].diPotwNieWysterowania :=0;
+	 "Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	 "Cip".obiekt[#nr].diPotwWysterowania := "diC201AV01c";
+	 "doC201AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 24;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyCip := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C201AV02';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC201AV02c";
+	"doC201AV02b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 25;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórParowyOdcinający:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C201AV21';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC201AV21b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 26;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórBypassPrzygotowaniaStacji := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC202AV01c";
+	"doC202AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 27;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórWydawczyCip := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202AV02';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC202AV02c";
+	"doC202AV02b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 28;//tu wpisz nuemr obiektu
+	"Cip".tor[0].pompkaDozowaniaŁuguwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202AV03';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC202AV03c";
+	"doC202AV03b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 29;//tu wpisz nuemr obiektu
+	"Cip".tor[0].pompkaDozowaniaŁuguwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202AV04';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC202AV04c";
+	"doC202AV04b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 30;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórParowyOdcinający := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202AV21';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC202AV21b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	
+	// // //
+	#nr := 33;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórZrzutowyDoKanalizacji := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C211AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC211AV01c";
+	"doC211AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	
+	// // //
+	#nr := 34;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórZrzutowyDoKanalizacji := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C212AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC212AV01c";
+	"doC212AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	
+	
+	// // //
+	#nr := 35;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyKwasu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1AV01c";
+	"doC2A1AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 36;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórWydawczyKwasu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV02';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1AV02c";
+	"doC2A1AV02b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 37;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórPowrotnyKwasu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV11';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1AV11c";
+	"doC2A1AV11b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 38;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórPowrotnyKwasu:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV12';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1AV12c";
+	"doC2A1AV12b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 39;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórUzupełnianiaWodyCzystejZbKwasu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV31';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1AV31c";
+	"doC2A1AV31b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 40;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórNaGruszkęZbiornikaKwasu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2A1AV41c";
+	"doC2A1AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 41;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórDozowaniaKwasuwLinię:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV42';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania :=0;
+	"doC2A1AV42b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 108;//tu wpisz nuemr obiektu
+	"Cip".tor[1].pompkaDozowaniaKwasuwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1AV43';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC2A1AV43b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	// // //
+	#nr := 109;//tu wpisz nuemr obiektu
+	"Cip".tor[1].pompkaDozowaniaŁuguwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV43';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC2L1AV43b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 45;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1AV01c";
+	"doC2D1AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 46;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórPowrotnyDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1AV11';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1AV11c";
+	"doC2D1AV11b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 47;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórStopowyPowrotuDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1AV41c";
+	"doC2D1AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 48;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórNaGruszkęZbiornikaDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1AV42';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D1AV42c";
+	"doC2D1AV42b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 49;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórDozowaniaDezynfekantuwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1AV81';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC2D1AV81b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 54;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórWydawczyDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2AV01c";
+	"doC2D2AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 55;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórPowrotnyDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2AV11';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2AV11c";
+	"doC2D2AV11b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 56;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórStopowyPowrotuDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2AV41c";
+	"doC2D2AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 57;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórNaGruszkęZbiornikaDezynfekantu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2AV42';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D2AV42c";
+	"doC2D2AV42b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 58;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórDozowaniaDezynfekantuwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2AV81';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania :=0;
+	"Cip".obiekt[#nr].diPotwWysterowania := 0;
+	"doC2D2AV81b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 63;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyDezynfekantu_2 := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3AV01c";
+	"doC2D3AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 64;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórStopowyPowrotuDezynfekantu_2:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3AV11';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3AV11c";
+	"doC2D3AV11b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 65;//tu wpisz nuemr obiektu
+	"Cip".tor[1].ZawórUzupełnianiaWodyCzystejZbDezynfekantu_2 := #nr;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3AV31';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3AV31c";
+	"doC2D3AV31b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 66;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórStopowyPowrotuDezynfekantu_2 := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3AV41c";
+	"doC2D3AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 67;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórNaGruszkęZbiornikaDezynfekantu_2 := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3AV42';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3AV42c";
+	"doC2D3AV42b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 68;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWodaNaGruszkęZbiornikaDezynfekantu_2 := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3AV43';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2D3AV43c";
+	"doC2D3AV43b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr :=72;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyŁugu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1AV01c";
+	"doC2L1AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 73;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórWydawczyŁugu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV02';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1AV02c";
+	"doC2L1AV02b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 74;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórPowrotnyŁugu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV11';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1AV11c";
+	"doC2L1AV11b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 75;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórPowrotnyŁugu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV12';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1AV12c";
+	"doC2L1AV12b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 76;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórUzupełnianiaWodyCzystejZbŁugu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV31';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1AV31c";
+	"doC2L1AV31b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 77;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórNaGruszkęZbiornikaŁugu := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2L1AV41c";
+	"doC2L1AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 78;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórDozowaniaLuguwLinię := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1AV42';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 0;
+	"Cip".obiekt[#nr].diPotwWysterowania :=1;
+	"doC2L1AV42b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 83;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyWodyWtórnej:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1AV01c";
+	"doC2R1AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 84;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórWydawczyWodyWtórnej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1AV02';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1AV02c";
+	"doC2R1AV02b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 85;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórPowrotnyWodyWtórnej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1AV11';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1AV11c";
+	"doC2R1AV11b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 86;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórPowrotnyWodyWtórnej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1AV12';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1AV12c";
+	"doC2R1AV12b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 87;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórNaGruszkęZbiornikaWodyWtórnej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2R1AV41c";
+	"doC2R1AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 91;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórWydawczyWodyCzystej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1AV02';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2W1AV02c";
+	"doC2W1AV02b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 92;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórUzupełnianiaWodyCzystejZbWodyCzystej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1AV31';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2W1AV31c";
+	"doC2W1AV31b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	#nr := 93;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórNaGruszkęZbiornikaWodyCzystej := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1AV41';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2W1AV41c";
+	"doC2W1AV41b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	//
+	//
+	#nr :=110;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórWydawczyWodyCzystej:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1AV01';
+	"Cip".obiekt[#nr].typObiektu := 1;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"Cip".obiekt[#nr].inJestPotwNiewysterowania := 0;
+	"Cip".obiekt[#nr].diPotwNieWysterowania := 0;
+	"Cip".obiekt[#nr].inJestPotwWysterowania := 1;
+	"Cip".obiekt[#nr].diPotwWysterowania := "diC2W1AV01c";
+	"doC2W1AV01b" := "Cip".obiekt[#nr].outStartUrządzenie;
+	
+	
+	
+	
+	// ////////////////////////temperatura
+	//
+	#nr:=1 ;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikwodyCzystej.temperatura := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2W1TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 2;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikWodyWtórnej.temperatura := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2R1TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 3;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikŁugu.temperatura := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2L1TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 4;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikKwasu.temperatura := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2A1TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 5;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu.temperatura := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2D1TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 6;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zbiornikDezynfekantu.temperatura:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2D2TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 7;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu_2.temperatura := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2D3TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 8;//tu wpisz nuemr obiektu
+	"Cip".tor[1].temperaturaNaPowrocie:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C211TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC211TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 9;//tu wpisz nuemr obiektu
+	"Cip".tor[2].temperaturaNaPowrocie := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C212TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC212TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 10;//tu wpisz nuemr obiektu
+	"Cip".tor[1].temperaturaZaWymiennikiem := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C201TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC201TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 11;//tu wpisz nuemr obiektu
+	"Cip".tor[2].temperaturaZaWymiennikiem := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202TT01';
+	"Cip".obiekt[#nr].typObiektu := 5;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC202TT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	
+	// // //////////////////////mierniki poziomu
+	// // //
+	#nr:=14;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikKwasu.poziomAnalogowy := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2A1LT01';
+	"Cip".obiekt[#nr].typObiektu :=18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2A1LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 15;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu.poziomAnalogowy := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D1LT01';
+	"Cip".obiekt[#nr].typObiektu := 18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2D1LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 16;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zbiornikDezynfekantu.poziomAnalogowy:= #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D2LT01';
+	"Cip".obiekt[#nr].typObiektu := 18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2D2LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 17;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zbiornikDezynfekantu_2.poziomAnalogowy := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2D3LT01';
+	"Cip".obiekt[#nr].typObiektu :=18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2D3LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 18;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikŁugu.poziomAnalogowy := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2L1LT01';
+	"Cip".obiekt[#nr].typObiektu := 18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2L1LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 19;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikWodyWtórnej.poziomAnalogowy := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2R1LT01';
+	"Cip".obiekt[#nr].typObiektu := 18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2R1LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	//
+	#nr := 20;//tu wpisz nuemr obiektu
+	"Cip".tor[0].zbiornikwodyCzystej.poziomAnalogowy := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C2W1LT01';
+	"Cip".obiekt[#nr].typObiektu := 18;
+	"Cip".obiekt[#nr].inPomiarRaw := "aiC2W1LT01";
+	#real := "Cip".obiekt[#nr].WartośćPomiaru;
+	
+	
+	////////////////////////konduktometr
+	#nr := 12;//tu wpisz nuemr obiektu
+	"Cip".tor[2].przewodnośćNaPowrocie := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C212QIC01';
+	"Cip".obiekt[#nr].typObiektu := 12;
+	
+	#REALWEJSCIE := INT_TO_REAL("aiC212QIC01");
+	#real := #REALWEJSCIE;
+	
+	
+	#aktualnyNumerReceptury := "Tor1_RecepturyStacjaMycia".numerUżywanejReceptury;
+	#aktualnyKrokMycia := "Tor1_RecepturyStacjaMycia".numerKrokuMycia;
+	IF "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[22] = 1
+	THEN
+	    #real := #REALWEJSCIE /
+	    (1 + (("Cip".obiekt["C212QIC01"].WartośćPomiaru -
+	    "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[18])
+	    * "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[17]) / 100);
+	
+	END_IF;
+	
+	
+	"Cip".obiekt["C212QIC01"].inPomiarRaw := REAL_TO_INT(#real);
+	#real := "Cip".obiekt["C212QIC01"].WartośćPomiaru;
+	
+	
+	////////////////////////////////////////////////
+	#nr := 13;//tu wpisz nuemr obiektu
+	"Cip".tor[1].przewodnośćNaPowrocie := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C211QIC01';
+	"Cip".obiekt[#nr].typObiektu := 12;
+	
+	#REALWEJSCIE := INT_TO_REAL("aiC211QIC01");
+	#real := #REALWEJSCIE;
+	
+	
+	#aktualnyNumerReceptury := "Tor1_RecepturyStacjaMycia".numerUżywanejReceptury;
+	#aktualnyKrokMycia := "Tor1_RecepturyStacjaMycia".numerKrokuMycia;
+	IF "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[22] = 1
+	THEN
+	    #real := #REALWEJSCIE /
+	    (1 + (("Cip".obiekt["C211QIC01"].WartośćPomiaru -
+	    "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[18])
+	    * "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[17]) / 100);
+	    
+	END_IF;
+	
+	
+	"Cip".obiekt["C211QIC01"].inPomiarRaw := REAL_TO_INT(#real);
+	#real := "Cip".obiekt["C211QIC01"].WartośćPomiaru;
+	
+	
+	
+	
+	
+	
+	// // //przepływomierze
+	
+	#nr:=106 ;//tu wpisz nuemr obiektu
+	"Cip".tor[1].przepływomierzZaWymiennikiem := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C201FT01';
+	"Cip".obiekt[#nr].typObiektu := 17;
+	// "Cip".obiekt[#nr].inPomiarRaw := "aiC101FT11";
+	// #real:="Cip".obiekt[#nr].WartośćPomiaru;
+	
+	"Cip".obiekt[#nr].pomiarTymczas:="C201FT01volume";
+	
+	
+	#nr := 107;//tu wpisz nuemr obiektu
+	"Cip".tor[2].przepływomierzZaWymiennikiem := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202FT01';
+	"Cip".obiekt[#nr].typObiektu := 17;
+	// "Cip".obiekt[#nr].inPomiarRaw := "aiC101FT11";
+	// #real:="Cip".obiekt[#nr].WartośćPomiaru;
+	
+	"Cip".obiekt[#nr].pomiarTymczas := "C202FT01volume";
+	
+	
+	
+	// ////////////////////////////////////  zawory analogowe
+	// //   
+	// //
+	#nr:=21 ;//tu wpisz nuemr obiektu
+	"Cip".tor[1].zawórParowyRegulacyjny := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202CV21';
+	"Cip".obiekt[#nr].typObiektu := 2;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"aoC201CV21" := REAL_TO_INT("Cip".obiekt[#nr].outWysterowanieUrządzenia  * 276.48);
+	//
+	// //
+	#nr := 22;//tu wpisz nuemr obiektu
+	"Cip".tor[2].zawórParowyRegulacyjny := #nr; ;//tu przyporządkuj numer do obiektu na odpowiednim torze stacji
+	;//tu wpisz nazwę
+	"Cip".obiekt[#nr].nazwaObiektu := 'C202CV21';
+	"Cip".obiekt[#nr].typObiektu := 2;
+	"Cip".obiekt[#nr].inZezwolenieNaPracę := #diKSB_OK;
+	"aoC202CV21" := REAL_TO_INT("Cip".obiekt[#nr].outWysterowanieUrządzenia * 276.48);
+	
+END_FUNCTION
+

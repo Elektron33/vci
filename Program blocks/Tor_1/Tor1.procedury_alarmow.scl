@@ -1,0 +1,401 @@
+﻿FUNCTION "Tor1.procedury_alarmow" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      obj : Int;
+      nr : Int;
+      Mnr : String;
+      aktualnyNumerReceptury : Int;
+      aktualnyKrokMycia : Int;
+      nrSygnału : Int;
+   END_VAR
+
+
+BEGIN
+	  //   //program zawiera procedury dla alarmow dla procedur o numerze >1  (procedura 0 i 1 jest obsługiwana w programie Obsługa alarmow)
+	  //   //procedury wyzwalane  z progrmu TablicaProcedór dla kolejnych kroków  "F1".obiekt["F100CP01"].procedura: = 2
+	  //   //wyzwolenie procedury zero  automatycznie  wyłącza alarm
+	  //   //procedura:=1   uruchamia alarm
+	  //   //
+	  //   //open ctrl+shift+(*)Numeric
+	  //   //close ctrl+shift+(/)Numeric
+	  //   #aktualnyNumerReceptury := "Tor1_RecepturyStacjaMycia".numerUżywanejReceptury;
+	  //   #aktualnyNumerReceptury := "Tor1_RecepturyStacjaMycia".numerUżywanejReceptury;
+	  //   #aktualnyKrokMycia := "Tor1_RecepturyStacjaMycia".numerKrokuMycia;
+	    
+	  //   //alarmy
+	  //   //
+	  //   "Start_trig"(CLK:="Tor1_hmi".button.bStart.set =1);
+	    
+	  //   IF "Start_trig".Q =1 THEN
+	  //       FOR "x" := 1 TO 14 DO
+	  //           "Tor1_alarmy".alarm["x"].stan := 0;
+	  //           "Tor1_alarmy".alarm["x"].timerek := 0;
+	  //       END_FOR;
+	  //   END_IF;
+	  //   "Tor1_alarmy".alarm[14].stan := BOOL_TO_INT(NOT "diKSB_1");
+	    
+	  //   //Brak wody wtórnej
+	    
+	  //   #nr := 1;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "CIP0_obiekty".obiekt["C1R1LL01"].hmiPotwWysterowania = 0
+	  //               AND "Tor1_program".program.numerKroku >= 7210
+	  //               AND "Tor1_program".program.numerKroku <= 7220
+	                
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 100);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //   END_CASE;
+	    
+	  //   // //Brak wody studziennej
+	    
+	  //   #nr := 2;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "Tor1_obiekty".obiekt["C131LL11"].hmiPotwWysterowania = 0
+	                
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 100);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //           IF "Tor1_alarmy".alarm[#nr].stan = 1
+	  //               AND "Tor1_program".program.numerKroku <> 7700 THEN
+	  //               "Tor1_hmi".button.bPauza.set := 1;
+	  //               "krokZapauzowany" := "Tor1_program".program.numerKroku;
+	  //               "Tor1_program".program.numerKroku := 7700;
+	  //           END_IF;
+	            
+	  //   END_CASE;
+	    
+	  //   //Brak ługu
+	    
+	  //   #nr := 3;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "CIP0_obiekty".obiekt["C1L1LL01"].hmiPotwWysterowania = 0
+	  //               AND #aktualnyKrokMycia = 3
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 100);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //           IF "Tor1_alarmy".alarm[#nr].stan = 1
+	  //               AND "Tor1_program".program.numerKroku <> 7700 THEN
+	  //               "Tor1_hmi".button.bPauza.set := 1;
+	  //               "krokZapauzowany" := "Tor1_program".program.numerKroku;
+	  //               "Tor1_program".program.numerKroku := 7700;
+	  //           END_IF;
+	            
+	  //   END_CASE;
+	    
+	  //   //Brak kwasu
+	    
+	  //   #nr := 4;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "CIP0_obiekty".obiekt["C1A1LL01"].hmiPotwWysterowania = 0
+	  //               AND #aktualnyKrokMycia = 4
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 100);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //           IF "Tor1_alarmy".alarm[#nr].stan = 1
+	  //               AND "Tor1_program".program.numerKroku <> 7700 THEN
+	  //               "Tor1_hmi".button.bPauza.set := 1;
+	  //               "krokZapauzowany" := "Tor1_program".program.numerKroku;
+	  //               "Tor1_program".program.numerKroku := 7700;
+	  //           END_IF;
+	            
+	  //   END_CASE;
+	    
+	  // //  Brak gotowości obiektu
+	    
+	  //   #nr := 5;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           #nrSygnału :=
+	  //           REAL_TO_INT("Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[24]);
+	  //           IF "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[21]=1
+	  //               AND
+	  //               "SIG".SIG[#nrSygnału] = 0
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 50);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //           IF "Tor1_alarmy".alarm[#nr].stan = 1
+	  //               AND "Tor1_program".program.numerKroku <> 7700 THEN
+	  //               "Tor1_hmi".button.bPauza.set := 1;
+	  //               "krokZapauzowany" := "Tor1_program".program.numerKroku;
+	  //               "Tor1_program".program.numerKroku := 7700;
+	  //           END_IF;
+	            
+	  //   END_CASE;
+	    
+	    
+	  //  // Brak przepływu na zasilaniu
+	    
+	  //   #nr := 6;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "Tor1_obiekty".obiekt["C101FT11"].WartośćPomiaru <=
+	  //               0.2*"Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[2]
+	  //               AND "Tor1_obiekty".obiekt["C101CP11"].inZadaneWysterowanieAuto>10
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000
+	  //                   AND "Tor1_obiekty".obiekt[1].outStartUrządzenie AND ("Tor1_hmi".button.bPauza.set=0)
+	  //               THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek >
+	  //               "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[3]*10);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //           IF "Tor1_alarmy".alarm[#nr].stan = 1
+	  //               AND "Tor1_program".program.numerKroku <> 7700 THEN
+	  //               "Tor1_hmi".button.bPauza.set := 1;
+	  //               "krokZapauzowany" := "Tor1_program".program.numerKroku;
+	  //               "Tor1_program".program.numerKroku := 7700;
+	  //           END_IF;
+	            
+	  //         0:
+	  //             "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //             "Tor1_alarmy".alarm[#nr].stan := 0;
+	              
+	            
+	  //   END_CASE;
+	    
+	  //   IF "Tor1_obiekty".obiekt["C101CP11"].inZadaneWysterowanieAuto < 10 THEN
+	  //       "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //       "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //   END_IF;
+	    
+	  //  // Brak przepływu na powrocie
+	    
+	  //   #nr := 7;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "Tor1_obiekty".obiekt["C101FV11"].hmiPotwWysterowania =0 AND ("Tor1_hmi".button.bPauza.set=0)
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek >
+	  //               "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[4] * 10);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	  //           IF "Tor1_alarmy".alarm[#nr].stan = 1
+	  //               AND "Tor1_program".program.numerKroku <> 7700 THEN
+	  //               "Tor1_hmi".button.bPauza.set := 1;
+	  //               "krokZapauzowany" := "Tor1_program".program.numerKroku;
+	  //               "Tor1_program".program.numerKroku := 7700;
+	  //           END_IF;
+	            
+	  //       0:
+	  //           "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //           "Tor1_alarmy".alarm[#nr].stan := 0;
+	            
+	  //   END_CASE;
+	    
+	    
+	    
+	  //   //Niskie stężenie ługu
+	    
+	  //   #nr :=8;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "Tor1_obiekty".obiekt["C101CT11"].WartośćPomiaru <=
+	  //               0.5 * "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10]
+	  //               AND #aktualnyKrokMycia=3
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek >600);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	        
+	            
+	  //   END_CASE;
+	    
+	    
+	    
+	    
+	  //   //Niskie stężenie kwasu
+	    
+	  //   #nr := 9;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "Tor1_obiekty".obiekt["C101CT11"].WartośćPomiaru <=
+	  //               0.5 * "Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[10]
+	  //               AND #aktualnyKrokMycia=4
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 600);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	       
+	            
+	  //   END_CASE;
+	    
+	    
+	  //   //Brak stężonego ługu
+	    
+	  //   #nr := 10;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "CIP0_obiekty".obiekt["C2L1LL01"].hmiPotwWysterowania = 0
+	                
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 600);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	            
+	          
+	            
+	  //   END_CASE;
+	    
+	  //   //Brak stężonego kwasu
+	    
+	  //   #nr := 11;
+	  //   CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	  //       2: //zalacz
+	  //           IF "CIP0_obiekty".obiekt["C2A1LL01"].hmiPotwWysterowania = 0
+	                
+	                
+	                
+	  //           THEN
+	  //               IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //               END_IF;
+	  //               "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 600);
+	  //           ELSE
+	  //               "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //               "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //           END_IF;
+	    
+	            
+	  //   END_CASE;
+	    
+	    //Brak dezynfekanta
+	    
+	    #nr := 12;
+	    CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	            
+	        2: //zalacz
+	            IF                "Cip".obiekt["Cip".tor[1].zbiorniczekDozowanieDezynfekantu.czujnikDolnegoPoziomu].hmiPotwWysterowania=0
+	                OR (  "Cip".obiekt["Cip".tor[1].czujnikPrzepływuDozowanegoDezynfekantu].hmiPotwWysterowania=0
+	                AND "Cip".obiekt["Cip".tor[1].zawórDozowaniaDezynfekantuwLinię].hmiPotwWysterowania=1)
+	                
+	            THEN
+	                IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	                    "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	                END_IF;
+	                "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 600);
+	            ELSE
+	                "Tor1_alarmy".alarm[#nr].timerek := 0;
+	                "Tor1_alarmy".alarm[#nr].stan := 0;
+	            END_IF;
+	         
+	    END_CASE;
+	    
+	    
+	        
+	  //       #nr := 13;
+	  //       CASE "Tor1_alarmy".alarm[#nr].procedura OF
+	                
+	  //           2: //zalacz
+	  //               IF  "Tor1_program".program.opóżnienie
+	  //                   >"Tor1_RecepturyStacjaMycia".Receptura[#aktualnyNumerReceptury].Krok[#aktualnyKrokMycia].PM[19]
+	                    
+	                    
+	  //               THEN
+	  //                   IF "Tor1_alarmy".alarm[#nr].timerek < 32000 THEN
+	  //                       "Tor1_alarmy".alarm[#nr].timerek := "Tor1_alarmy".alarm[#nr].timerek + 1;
+	  //                   END_IF;
+	  //                   "Tor1_alarmy".alarm[#nr].stan := BOOL_TO_INT("Tor1_alarmy".alarm[#nr].timerek > 600);
+	  //               ELSE
+	  //                   "Tor1_alarmy".alarm[#nr].timerek := 0;
+	  //                   "Tor1_alarmy".alarm[#nr].stan := 0;
+	  //               END_IF;
+	         
+	                
+	  //       END_CASE;
+	  
+END_FUNCTION
+

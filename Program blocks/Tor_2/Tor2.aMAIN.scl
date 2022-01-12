@@ -1,0 +1,22 @@
+﻿FUNCTION "Tor2.aMAIN" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	//ponizsze FC należy napisać dla każdego urządzenia od nowa
+	"Tor2.kroki"();
+	"Tor2.procedury_alarmow"();
+	"Tor2.procedury_obiektów"();
+	"Tor2.procedury_sygnałów"();
+	"Tor2_RecepturyStacjaMycia"();
+	
+	
+	
+	
+	
+	
+	
+	
+	
+END_FUNCTION
+

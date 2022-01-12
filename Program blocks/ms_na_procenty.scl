@@ -1,0 +1,77 @@
+﻿FUNCTION "ms_na_procenty" : Void
+TITLE = przeliczanie ms na procenty roztworu mycia kwasu i ługu
+{ S7_Optimized_Access := 'TRUE' }
+AUTHOR : 'P.Kowalski'
+VERSION : 0.1
+   VAR_INPUT 
+      inWartośćMierzona : Real;   // Wartość mierzona roztworu (alkalicznego lub kwaśnego) w milisimensach
+      inJednostkaAlkaliczna : Real;   // 1% środka alkalicznego= 48mS
+      inJednostkaKwaśna : Real;   // 1% środka kwaśnego=56mS
+      inPrzewodnośćCzystejWody : Real;   // Przewodność czystej wody=0.3mS
+      inWartośćOdcięcia : Real;   // Jeżeli wartość mierzona spadnie ponizej odcięcia to wyswietlamy 0
+      inJestMycieKwaśne : Bool;   // obliczamy wartości podczas mycia kwaśnego
+      inJestMycieAlkaliczne : Bool;   // obliczamy wartości podczas mycia alkalicznego
+   END_VAR
+
+   VAR_OUTPUT 
+      outStężenieŚrodka : Real;
+   END_VAR
+
+   VAR_TEMP 
+      temp_1 : Real;
+      temp_2 : Real;
+      temp_3 : Real;
+      temp_4 : Real;
+      temp_5 : Real;
+   END_VAR
+
+
+BEGIN
+	    // Nastawa:                    Wartość:
+	    //  1:  1% środka alkalicznego= 48  mS
+	    //  2:  1% środka kwaśnego= 56  mS
+	    //  3:  Przewodność czystej wody    0,3 mS
+	    // -------------------------------------------------  
+	    //     Obliczenia:
+	    // ---------------
+	    //     Wartość mierzona roztworu alkalicznego[mS]:
+	    //     72  mS
+	    //     Stężenie środka alkalicznego [%]:
+	    //     x=72/48     -Tu jest formuła
+	    //     1,5 %   Wskazania DO wyświetlenia w kroku 3 programu stacji mycia
+	    //     Wartość stężenia procentowego środka alkaliczengo wyświetlamy na panelu obok wartości mierzonej w mSiemensach - nie używamy jej nigdzie w programie, tylko wyświetlamy w kroku 3
+	    // ---------------
+	    //     Wartość mierzona roztworu kwaśnego[mS]:
+	    //     57  mS
+	    //     Stężenie środka kwaśnego [%]:
+	    //      x=57/56     -Tu jest formuła
+	    //     1,0 %   Wskazania DO wyświetlenia w kroku 4 programu stacji mycia
+	    //    -------------
+	    //     Jeżeli wartość mierzona spadnie ponizej
+	    //     przewodnosc wody+ wartosc odciecia =0,6 mS
+	    //     wpisujemy stężenie 0%
+	    //     Wartość stężenia procentowego środka kwasnego wyświetlamy na panelu obok wartości mierzonej w mSiemensach - nie używamy jej nigdzie w programie, tylko wyświetlamy w kroku 4
+	    //     W pozostałych krokach wyświetlamy 0,0%
+	    //     ---------------------     
+	    //     Wartość tą należy też dodać DO rejestracji w InTouch dla obu torów stacji mycia.
+	    //     
+	    
+	IF #inJestMycieAlkaliczne THEN
+	    #outStężenieŚrodka := #inWartośćMierzona / (#inJednostkaAlkaliczna+0.000001);
+	END_IF;
+	
+	IF #inJestMycieKwaśne THEN
+	    #outStężenieŚrodka := #inWartośćMierzona / (#inJednostkaKwaśna+0.000001);
+	END_IF;
+	
+	IF #inWartośćMierzona < #inPrzewodnośćCzystejWody + 0.3 THEN
+	    #outStężenieŚrodka := 0;
+	END_IF;
+	
+	IF #inJestMycieAlkaliczne = 0 AND #inJestMycieKwaśne = 0 THEN
+	    #outStężenieŚrodka := 0.0;
+	END_IF;
+	
+	
+END_FUNCTION
+

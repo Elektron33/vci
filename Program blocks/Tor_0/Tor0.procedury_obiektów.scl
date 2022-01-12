@@ -1,0 +1,202 @@
+﻿FUNCTION "Tor0.procedury_obiektów" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      obj : Int;
+      nr : Int;
+      Mnr : String;
+      aktualnyNumerReceptury : Int;
+      aktualnyKrokMycia : Int;
+      temp : Int;
+   END_VAR
+
+
+BEGIN
+	    //program zawiera procedury dla napedów i zaworów dla procedur o numerze >1  (procedura 0 i 1 jest obsługiwana w programie Obsługa obiektów)
+	    //procedury wyzwalane  z progrmu TablicaProcedór dla kolejnych kroków  "F1".obiekt["F100CP01"].procedura: = 2
+	    //wyzwolenie procedury zero  automatycznie  wyłącza naped/zawór
+	    //procedura:=1   uruchamia napęd/zawór na 100% - czyli załaczenie napedu jak kiedyś SET -- obsługiwana jest w programie Obsługa obiektów
+	    //PAUZA może być obsługiwana w każdej procedurze z osobna
+	    //
+	    //open ctrl+shift+(*)Numeric
+	    //close ctrl+shift+(/)Numeric
+	
+	    
+	
+	    
+	    REGION POMPKA PODAWANIA ŁUGU W LINIE
+	    
+	        #nr := "Cip".tor[0].pompkaDozowaniaŁuguwLinię;
+	        
+	        CASE "Tor1_program".program.numerKroku OF
+	            7100..7699:  //we wszystkich krokach
+	                "Cip".obiekt[#nr].procedura := 2;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //set - warunki dla wejścia funkcji Set
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 10;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1
+	    AND "Cip".obiekt["Cip".tor[1].zawórDozowaniaLuguwLinię].hmiPotwWysterowania=1;
+	    
+	    //reset - warunki dla wejścia funkcji Reset
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	    OR "Cip".obiekt["Cip".tor[1].zawórDozowaniaLuguwLinię].hmiPotwWysterowania=0;
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    END_CASE;
+	    END_REGION
+	    
+	    REGION POMPKA DOZOWANIA KWASU W LINIE
+	    
+	        #nr := "Cip".tor[0].pompkaDozowaniaKwasuwLinię;
+	        CASE "Tor1_program".program.numerKroku OF
+	            7100..7699:  //we wszystkich krokach
+	                "Cip".obiekt[#nr].procedura := 2;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	        END_CASE;
+	        
+	    CASE "Cip".obiekt[#nr].procedura OF
+	    2:
+	    //set - warunki dla wejścia funkcji Set
+	    "Cip".obiekt[#nr].SetReset.czasDoSet := 10;
+	    "Cip".obiekt[#nr].SetReset.inSet :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 1
+	    AND
+	    ("Cip".obiekt["Cip".tor[1].zawórDozowaniaKwasuwLinię].hmiPotwWysterowania = 1
+	    OR "Cip".obiekt["Cip".tor[2].zawórDozowaniaKwasuwLinię].hmiPotwWysterowania = 1);
+	    
+	    
+	    //reset - warunki dla wejścia funkcji Reset
+	    "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	    "Cip".obiekt[#nr].SetReset.inReset :=
+	    "Cip".obiekt["Cip".tor[0].zbiorniczekDozowaniaKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania = 0
+	    OR "Cip".obiekt["Cip".tor[1].zawórDozowaniaKwasuwLinię].hmiPotwWysterowania = 0;
+	    
+	    //załaczanie
+	    "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	    
+	    //wysterowanie
+	    "Cip".obiekt[#nr].inZadaneWysterowanieAuto := 100.0;
+	    
+	    END_CASE;
+	    
+	    END_REGION
+	    
+	    REGION ZAWOR UZUPELNIANIA WODĄ WODY CZYSTEJ
+	        
+	        #nr := "Cip".tor[0].zawórUzupełnianiaWodyCzystejZbWodyCzystej;
+	        
+	        CASE "Tor1_program".program.numerKroku OF
+	            7100..7700:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	                
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                NOT "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	                
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 0;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                "Cip".obiekt["Cip".tor[0].zbiornikwodyCzystej.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWOR UZUPELNIANIA WODĄ zbiornika ługu
+	        
+	        #nr := "Cip".tor[0].zawórUzupełnianiaWodyCzystejZbŁugu;
+	        
+	        CASE "Tor1_program".program.numerKroku OF
+	            7100..7700:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	                
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	                
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście
+	                AND NOT "Cip".obiekt["Cip".tor[0].zbiornikŁugu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	                
+	        END_CASE;
+	    END_REGION
+	    
+	    REGION ZAWOR UZUPELNIANIA WODĄ zbiornika kwasu
+	        
+	        #nr := "Cip".tor[0].zawórUzupełnianiaWodyCzystejZbKwasu;
+	        
+	        CASE "Tor1_program".program.numerKroku OF
+	            7100..7700:
+	                "Cip".obiekt[#nr].procedura := 2;
+	            ELSE
+	                "Cip".obiekt[#nr].procedura := 0;
+	                
+	        END_CASE;
+	        
+	        
+	        
+	        CASE "Cip".obiekt[#nr].procedura OF
+	                
+	            2:
+	                //wyzwolenie timerków
+	                "Cip".obiekt[#nr].SetReset.czasDoSet := 1;
+	                "Cip".obiekt[#nr].SetReset.inSet :=
+	                NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	                
+	                
+	                "Cip".obiekt[#nr].SetReset.czasDoReset := 5;
+	                "Cip".obiekt[#nr].SetReset.inReset :=
+	                "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikDolnegoPoziomu].hmiPotwWysterowania;
+	                
+	                //załaczanie
+	                "Cip".obiekt[#nr].inStartAuto := "Cip".obiekt[#nr].SetReset.wyjście
+	                AND NOT "Cip".obiekt["Cip".tor[0].zbiornikKwasu.czujnikGórnegoPoziomu].hmiPotwWysterowania;
+	                
+	        END_CASE;
+	    END_REGION
+END_FUNCTION
+
