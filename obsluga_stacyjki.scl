@@ -1,0 +1,116 @@
+﻿FUNCTION "obsluga_stacyjki" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      nr : Int;
+   END_VAR
+
+
+BEGIN
+	//program służy do zasilenia w dane obiektu [0] który wyswietlany jest na stacyjkach, danymi z obiektu wybranegozHMI
+	//program ten obsługuje stacyjn=ki na panelu dotykowym proface'a
+	
+	FOR #nr := 1 TO 110 DO
+	    IF "Cip".obiekt[#nr].hmiPokażStacyjkę = 1 THEN
+	        "numerObiektuWybranyZHMI" := #nr;
+	    END_IF;
+	    
+	END_FOR;
+	"numerObiektuWybranyZHMI" := "numerObiektuWybranyZHMI";
+	
+	
+	IF "Cip".obiekt[0].hmiPokażStacyjkę = 0 AND "Cip".obiekt[0].typObiektu > 0
+	 
+	THEN
+	    "numerObiektuWybranyZHMI" := 0;
+	    "Cip".obiekt[0].typObiektu := 0;
+	    FOR #nr := 1 TO 110 DO
+	        "Cip".obiekt[#nr].hmiPokażStacyjkę := 0;
+	    END_FOR;
+	    "numerObiektuWybranyZHMI" := 0;
+	END_IF;
+	
+	
+	
+	
+	
+	REGION aktualizuj stacyjke obiektu 0
+	    IF "numerObiektuWybranyZHMI" <> "staryNumerObiektuWybranyZHMI" THEN //gdy ktoś wybierze numer obiektu/stacyjki rózny od poprzedniej to przepisz do zerowej wszystkie parametry nowego obiektu
+	        "Cip".obiekt[0] :="Cip".obiekt["numerObiektuWybranyZHMI"];
+	    END_IF;
+	    "staryNumerObiektuWybranyZHMI" := "numerObiektuWybranyZHMI";
+	END_REGION
+	REGION //aktualizuj wybrane (te co są zapisywalne) dane ze stacyjki DO obiektu wybranego
+	    
+	    IF "staryNumerObiektuWybranyZHMI" <> 0 THEN
+	        "Cip".obiekt[0].typObiektu :="Cip".obiekt["numerObiektuWybranyZHMI"].typObiektu;
+	        "Cip".obiekt[0].nazwaObiektu :="Cip".obiekt["numerObiektuWybranyZHMI"].nazwaObiektu;
+	        "Cip".obiekt[0].inStartAuto :="Cip".obiekt["numerObiektuWybranyZHMI"].inStartAuto;
+	        "Cip".obiekt[0].outStartUrządzenie :="Cip".obiekt["numerObiektuWybranyZHMI"].outStartUrządzenie;
+	        "Cip".obiekt[0].inZadaneWysterowanieAuto :="Cip".obiekt["numerObiektuWybranyZHMI"].inZadaneWysterowanieAuto;
+	        "Cip".obiekt[0].outWysterowanieUrządzenia :="Cip".obiekt["numerObiektuWybranyZHMI"].outWysterowanieUrządzenia;
+	        "Cip".obiekt[0].diPotwWysterowania :="Cip".obiekt["numerObiektuWybranyZHMI"].diPotwWysterowania;
+	        "Cip".obiekt[0].diPotwNieWysterowania :="Cip".obiekt["numerObiektuWybranyZHMI"].diPotwNieWysterowania;
+	        "Cip".obiekt[0].inZezwolenieNaPracę :="Cip".obiekt["numerObiektuWybranyZHMI"].inZezwolenieNaPracę;
+	        "Cip".obiekt[0].inZezwolenieNaPracę :="Cip".obiekt["numerObiektuWybranyZHMI"].inZezwolenieNaPracę;
+	        "Cip".obiekt[0].inLiftUp :="Cip".obiekt["numerObiektuWybranyZHMI"].inLiftUp;
+	        "Cip".obiekt[0].inLiftDown :="Cip".obiekt["numerObiektuWybranyZHMI"].inLiftDown;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiManualLiftUp :="Cip".obiekt[0].hmiManualLiftUp;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiManualLiftDown :="Cip".obiekt[0].hmiManualLiftDown;
+	        "Cip".obiekt[0].outLiftUp :="Cip".obiekt["numerObiektuWybranyZHMI"].outLiftUp;
+	        "Cip".obiekt[0].outLiftDown :="Cip".obiekt["numerObiektuWybranyZHMI"].outLiftDown;
+	        
+	        "Cip".obiekt[0].Awaria :="Cip".obiekt["numerObiektuWybranyZHMI"].Awaria;
+	        "Cip".obiekt[0].kodBłedu :="Cip".obiekt["numerObiektuWybranyZHMI"].kodBłedu;
+	        "Cip".obiekt[0].hmiStanUrządzenia :="Cip".obiekt["numerObiektuWybranyZHMI"].hmiStanUrządzenia;
+	      
+	        "Cip".obiekt[0].hmiPotwWysterowania :="Cip".obiekt["numerObiektuWybranyZHMI"].hmiPotwWysterowania;
+	        
+	        
+	        "Cip".obiekt[0].pid_SP :="Cip".obiekt["numerObiektuWybranyZHMI"].pid_SP;
+	        "Cip".obiekt[0].pid_PV :="Cip".obiekt["numerObiektuWybranyZHMI"].pid_PV;
+	        
+	        
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiTrybAutoManual :="Cip".obiekt[0].hmiTrybAutoManual;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiManualStart :="Cip".obiekt[0].hmiManualStart;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiResetAwaria :="Cip".obiekt[0].hmiResetAwaria;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiManualneWysterowanie :="Cip".obiekt[0].hmiManualneWysterowanie;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiSymulujSygnałyWejsciowe :="Cip".obiekt[0].hmiSymulujSygnałyWejsciowe;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiSymulacjaPotwWysterowania :="Cip".obiekt[0].hmiSymulacjaPotwWysterowania;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiSymulacjaPotwNieWysterowania :="Cip".obiekt[0].hmiSymulacjaPotwNieWysterowania;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiSymulowanaWartośćAnalogowa :="Cip".obiekt[0].hmiSymulowanaWartośćAnalogowa;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].hmiPrądFalownika :="Cip".obiekt[0].hmiPrądFalownika;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].tFiltr :="Cip".obiekt[0].tFiltr;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].minSkali :="Cip".obiekt[0].minSkali;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].maxskali :="Cip".obiekt[0].maxskali;
+	        
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].pid_P :="Cip".obiekt[0].pid_P;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].pid_I :="Cip".obiekt[0].pid_I;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].pid_D :="Cip".obiekt[0].pid_D;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].pid_Rampa :="Cip".obiekt[0].pid_Rampa;
+	        
+	        
+	        
+	        
+	        "Cip".obiekt[0].WartośćPomiaru :="Cip".obiekt["numerObiektuWybranyZHMI"].WartośćPomiaru;
+	        "Cip".obiekt["numerObiektuWybranyZHMI"].zerujLicznik1 :="Cip".obiekt[0].zerujLicznik1;
+	        "Cip".obiekt[0].licznik1 :="Cip".obiekt["numerObiektuWybranyZHMI"].licznik1;
+	        "Cip".obiekt[0].hmiMetry3NaImpuls :="Cip".obiekt["numerObiektuWybranyZHMI"].hmiMetry3NaImpuls * 10.0;
+	        "Cip".obiekt[0].diImpulsy :="Cip".obiekt["numerObiektuWybranyZHMI"].diImpulsy;
+	        
+	        
+	        
+	        
+	        "Cip".obiekt[0].czasPracyGodziny :="Cip".obiekt["numerObiektuWybranyZHMI"].czasPracyGodziny;
+	        
+	        
+	        // "Cip".obiekt["numerObiektuWybranyZHMI"].hmiPokażStacyjkę:="Cip".obiekt[0].hmiPokażStacyjkę;
+	    END_IF;
+	    
+	END_REGION
+	
+	
+	
+	
+END_FUNCTION
+
